@@ -81,7 +81,9 @@ los routers, VPN o proveedores de internet.
 Se requiere CMake, un compilador MinGW compatible con SDL2 y Python 3.12 para
 las pruebas. `tools/regen.ps1` regenera el código desde una ROM verificada y
 `tools/regen_bios.ps1` regenera la parte del BIOS desde el dump local. Nunca se
-edita `generated/` a mano.
+edita `generated/` a mano. Antes de configurar una copia recién clonada,
+ejecuta `powershell -ExecutionPolicy Bypass -File tools/prepare_gbarecomp.ps1`
+para fijar la versión de recomp-net usada por esta release.
 
 ## Créditos y licencia
 

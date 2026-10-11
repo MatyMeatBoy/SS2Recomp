@@ -72,6 +72,7 @@ __pycache__/
 # Reverse-engineering dumps derived from the ROM.
 re/dumps/
 *.pcmap
+re/ptr_candidates.txt
 
 # Launcher art rendered locally from the user ROM title screen.
 recomp/launcher/boxart.tga
