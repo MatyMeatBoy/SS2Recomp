@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(ShiningSoul2Recomp VERSION 0.1.1 LANGUAGES C CXX)
 
+option(SS2_BUILD_LINK_PROBE "Build the headless scripted multiplayer qualification tool" OFF)
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -76,6 +78,38 @@ target_compile_definitions(ShiningSoul2Recomp PRIVATE
     GBARECOMP_DEFAULT_DEBUG_PORT=19901
     GBARECOMP_WINDOW_TITLE="ShiningSoul2Recomp"
     GBARECOMP_DEFAULT_GAME_CONFIG="game.toml")
+
+if(SS2_BUILD_LINK_PROBE)
+    if(NOT GBARECOMP_NETPLAY)
+        message(FATAL_ERROR "SS2_BUILD_LINK_PROBE requires GBARECOMP_NETPLAY")
+    endif()
+    # Reuse the already compiled guest corpus to keep qualification cheap in RAM.
+    # This probe is for the MinGW Makefiles development build used by this project.
+    if(NOT CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
+        message(FATAL_ERROR "SS2_BUILD_LINK_PROBE currently requires MinGW Makefiles")
+    endif()
+    set(_probe_objects)
+    foreach(_source IN LISTS GAME_GENERATED_SOURCES)
+        file(RELATIVE_PATH _relative "${CMAKE_CURRENT_SOURCE_DIR}" "${_source}")
+        list(APPEND _probe_objects "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/ShiningSoul2Recomp.dir/${_relative}.obj")
+    endforeach()
+    set_source_files_properties(${_probe_objects} PROPERTIES EXTERNAL_OBJECT TRUE GENERATED TRUE)
+    add_executable(SS2LinkProbe
+        "${GBARECOMP_ROOT}/tools/link_session/main.cpp"
+        "${GBARECOMP_ROOT}/tools/link_session/netplay_probe.cpp"
+        re/link_probe_setup.cpp ${_probe_objects})
+    add_dependencies(SS2LinkProbe ShiningSoul2Recomp)
+    target_include_directories(SS2LinkProbe PRIVATE
+        "${GBARECOMP_ROOT}/src/armv4t" "${GBARECOMP_ROOT}/src/gba"
+        "${GBARECOMP_ROOT}/src/runtime" src)
+    target_compile_definitions(SS2LinkProbe PRIVATE GBA_LINK_PROBE_SETUP=1
+        GBA_LINK_PROBE_NETPLAY=1 GBA_LINK_PROBE_PROGRAM="shining-soul-2-eu"
+        GBA_LINK_PROBE_SHA1="aa1288be9257337abdfe3034898cf6c7aa778fbc")
+    target_link_libraries(SS2LinkProbe PRIVATE "-Wl,--start-group"
+        gbarecomp_runtime gbarecomp_debug gbarecomp_gba gbarecomp_armv4t
+        gbarecomp_netplay "-Wl,--end-group")
+    target_link_options(SS2LinkProbe PRIVATE "-Wl,--stack,16777216")
+endif()
 if(GBARECOMP_NETPLAY)
     target_link_libraries(ShiningSoul2Recomp PRIVATE gbarecomp_netplay)
     gbarecomp_target_netplay_identity(ShiningSoul2Recomp

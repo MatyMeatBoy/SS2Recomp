@@ -112,6 +112,12 @@ correcciones de rollback durante gameplay. Un corte de red de dos segundos
 impidió completar una prueba de cuatro jugadores dentro de 60 segundos;
 la recuperación sigue pendiente. Véase la matriz enlazada arriba.
 
+Las pruebas posteriores con controles distintos observaron un tick de rollback
+corregido por proceso en loopback. Bajo estrés mayor, rollback rechazó un
+checkpoint por divergencia; delay-sync sí acordó estados idénticos. Por ahora
+se mantiene el estado experimental. Estos controles se probaron en la selección
+de clases, y todavía falta verificar combate enlazado.
+
 ## Compilación
 
 Se requiere CMake, un compilador MinGW compatible con SDL2 y Python 3.12 para
@@ -120,6 +126,16 @@ las pruebas. `tools/regen.ps1` regenera el código desde una ROM verificada y
 edita `generated/` a mano. Antes de configurar una copia recién clonada,
 ejecuta `powershell -ExecutionPolicy Bypass -File tools/prepare_gbarecomp.ps1`
 para fijar la versión de recomp-net usada por esta release.
+
+### Perfil online conservador
+
+Inicia `Jugar ShiningSoul2Recomp Online Seguro.bat` o añade `--netplay-safe`.
+Usa controles confirmados y espera cortes temporales de una sesión establecida.
+Puede pausar ante latencia; no recupera procesos cerrados ni migra el host.
+[Diseño y límites](docs/NETPLAY_RECOVERY.md).
+
+Para reconstruir, ejecuta `tools/prepare_gbarecomp.ps1` tras inicializar los
+submódulos: aplica los parches de runtime usados por este proyecto.
 
 ## Créditos y licencia
 

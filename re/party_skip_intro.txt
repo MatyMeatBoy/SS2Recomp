@@ -1,0 +1,18 @@
+# Adapted from the original bot trace: skip the new-game book sequence.
+4 A A A
+116 - - -
+4 S S S
+116 - - -
+4 A A A
+116 - - -
+4 S S S
+116 - - -
+4 A A A
+116 - - -
+4 S S S
+116 - - -
+4 A A A
+116 - - -
+4 S S S
+116 - - -
+shot party_game

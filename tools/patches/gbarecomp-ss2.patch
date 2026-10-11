@@ -1,0 +1,177 @@
+diff --git a/src/armv4t/runtime_arm.cpp b/src/armv4t/runtime_arm.cpp
+index 3d07d55..a72829d 100644
+--- a/src/armv4t/runtime_arm.cpp
++++ b/src/armv4t/runtime_arm.cpp
+@@ -1433,6 +1433,9 @@ extern "C" unsigned long long g_runtime_irq_max_depth = 0;
+ // spins its drive-to-completion loop until it equals the IRQ's own depth.
+ extern "C" uint32_t      g_irq_iret_depth = 0;
+ 
++extern "C" const char* runtime_yield_reason(void);
++extern "C" unsigned long long g_runtime_vblank_starts;
++
+ extern "C" void runtime_irq(uint32_t return_address) {
+     ++g_runtime_irq_entries;
+     ++g_irq_nest_depth;
+@@ -1558,8 +1561,9 @@ extern "C" void runtime_irq(uint32_t return_address) {
+         if (++irq_guard >= kMaxIrqDispatches) {
+             std::fprintf(stderr,
+                 "runtime_irq: handler at depth %u did not iret after %u "
+-                "dispatches (R15=0x%08X, cpsr=0x%08X) — abandoning\n",
+-                my_depth, irq_guard, g_cpu.R[15], g_cpu.cpsr);
++                "dispatches (R15=0x%08X, cpsr=0x%08X, yield=%s, frame=%llu) — abandoning\n",
++                my_depth, irq_guard, g_cpu.R[15], g_cpu.cpsr,
++                runtime_yield_reason(), (unsigned long long)g_runtime_vblank_starts);
+             runtime_trace_dump_recent(160);
+             break;
+         }
+diff --git a/src/runtime/multiplayer_launch.h b/src/runtime/multiplayer_launch.h
+index 3be2484..0a1d1e8 100644
+--- a/src/runtime/multiplayer_launch.h
++++ b/src/runtime/multiplayer_launch.h
+@@ -48,6 +48,8 @@ struct GbaNetplayLaunch {
+     // that player's cable port / machine ID, a permutation of the same range.
+     unsigned player_count=2;
+     unsigned local_seat=0, input_delay=6, prediction=6;
++    // Zero keeps an established transport alive during temporary silence.
++    std::uint32_t connection_grace_ms=60000;
+     std::uint32_t session_id=0;
+     std::array<unsigned,kGbaMaxSessionPlayers> seat_machine{0,1,2,3};
+     // Online matches dial the lobby server's UDP input relay (every peer's
+diff --git a/src/runtime/multiplayer_match.cpp b/src/runtime/multiplayer_match.cpp
+index 18e1457..323e347 100644
+--- a/src/runtime/multiplayer_match.cpp
++++ b/src/runtime/multiplayer_match.cpp
+@@ -75,7 +75,7 @@ std::uint64_t GbaNetplayMatch::replay_ticks() const {
+ GbaNetplayMatch::Step GbaNetplayMatch::poll(bool allow_simulation) {
+     try {
+         rnet_session_pump(session_);
+-        connection_=gba_netplay_connection_status(session_);
++        connection_=gba_netplay_connection_status(session_,options_.connection_grace_ms);
+         if (phase_==Phase::Failed || phase_==Phase::CheckpointReady) return Step::Idle;
+         if (connection_.phase==GbaConnectionPhase::TimedOut || connection_.phase==GbaConnectionPhase::PeerLeft)
+             throw std::runtime_error("GBA match peer unavailable: "+gba_netplay_seat_names(connection_.seats)+
+diff --git a/src/runtime/multiplayer_match.h b/src/runtime/multiplayer_match.h
+index caf9918..9b592f3 100644
+--- a/src/runtime/multiplayer_match.h
++++ b/src/runtime/multiplayer_match.h
+@@ -15,6 +15,7 @@ struct GbaNetplayMatchOptions {
+     int prediction = 6;
+     bool rollback = true;
+     bool force_turn = false;
++    std::uint32_t connection_grace_ms=60000;
+     std::uint32_t planned_finish_tick=0;
+     // The caller loaded an agreed paired archive; compare it byte-for-byte
+     // instead of exchanging the individual cartridge saves at cold startup.
+diff --git a/src/runtime/multiplayer_netplay.cpp b/src/runtime/multiplayer_netplay.cpp
+index 6d81133..72acd99 100644
+--- a/src/runtime/multiplayer_netplay.cpp
++++ b/src/runtime/multiplayer_netplay.cpp
+@@ -8,8 +8,8 @@
+ #include <limits>
+ 
+ namespace gbarecomp {
+-GbaConnectionStatus gba_netplay_connection_status(const RNetSession* session) {
+-    constexpr std::uint32_t grace=60000, show_after=2000;
++GbaConnectionStatus gba_netplay_connection_status(const RNetSession* session, std::uint32_t grace) {
++    constexpr std::uint32_t show_after=2000;
+     if (!session) return {GbaConnectionPhase::Connecting,grace};
+     RNetSessionStats stats{}; rnet_session_get_stats(session,&stats);
+     const unsigned seats=std::min<unsigned>(stats.slot_count,RNET_MAX_SLOTS);
+@@ -24,11 +24,11 @@ GbaConnectionStatus gba_netplay_connection_status(const RNetSession* session) {
+         if (age==RNET_PEER_RX_NEVER) age=stats.last_peer_rx_age_ms; // running, not yet heard directly
+         worst=std::max(worst,age);
+         if (age>=show_after) late|=1u<<seat;
+-        if (age>=grace) lost|=1u<<seat;
++        if (grace && age>=grace) lost|=1u<<seat;
+     }
+     if (lost) return {GbaConnectionPhase::TimedOut,0,lost};
+     return {late ? GbaConnectionPhase::Reconnecting : GbaConnectionPhase::Connected,
+-        grace-static_cast<std::uint32_t>(worst),late};
++        grace ? grace-static_cast<std::uint32_t>(worst) : 0,late};
+ }
+ namespace {
+ constexpr std::uint32_t kSnapshotHeader=0x314e4247;
+diff --git a/src/runtime/multiplayer_netplay.h b/src/runtime/multiplayer_netplay.h
+index 167b003..d8206e3 100644
+--- a/src/runtime/multiplayer_netplay.h
++++ b/src/runtime/multiplayer_netplay.h
+@@ -19,7 +19,7 @@ struct GbaConnectionStatus {
+ // down an intact session merely because its latest input has not arrived.
+ // Judged per remote seat: in a room of four, one silent console must not
+ // hide behind the two that keep talking.
+-GbaConnectionStatus gba_netplay_connection_status(const RNetSession*);
++GbaConnectionStatus gba_netplay_connection_status(const RNetSession*, std::uint32_t grace_ms=60000);
+ struct GbaConfirmedCheckpoint {
+     // All inputs before next_tick are confirmed. The snapshot is the entire
+     // paired machine/cable system, not independent cartridge files.
+diff --git a/src/runtime/multiplayer_runner.cpp b/src/runtime/multiplayer_runner.cpp
+index 3eb97dd..1663222 100644
+--- a/src/runtime/multiplayer_runner.cpp
++++ b/src/runtime/multiplayer_runner.cpp
+@@ -77,6 +77,7 @@ int run(const GbaNetplayLaunch& launch,const GbaNetplayBoot& boot) {
+     options.network.local_slot=launch.local_seat;
+     options.network.session_id=launch.session_id;
+     options.network.input_delay=launch.input_delay;
++    options.connection_grace_ms=launch.connection_grace_ms;
+     options.network.slot_count=static_cast<rnet_u8>(players);
+     options.network.occupied_mask=(1u<<players)-1;
+     options.prediction=launch.prediction; options.rollback=launch.rollback;
+@@ -182,7 +183,8 @@ int run(const GbaNetplayLaunch& launch,const GbaNetplayBoot& boot) {
+         }
+         const auto connection=match.connection();
+         const auto status=connection.phase==GbaConnectionPhase::Reconnecting ?
+-            "Reconnecting "+gba_netplay_seat_names(connection.seats)+" ("+std::to_string((connection.grace_remaining_ms+999)/1000)+"s)" :
++            "Reconnecting "+gba_netplay_seat_names(connection.seats)+
++                (launch.connection_grace_ms ? " ("+std::to_string((connection.grace_remaining_ms+999)/1000)+"s)" : " - waiting for network") :
+             match.phase()==GbaNetplayMatch::Phase::Starting ? std::string("Connecting") :
+             (closing || (match.checkpoint_pending() && !boot.finish_tick)) ?
+                 std::string("Saving and leaving - close again to discard") :
+diff --git a/src/runtime/runtime_bus_bridge.cpp b/src/runtime/runtime_bus_bridge.cpp
+index 044fc13..d44b807 100644
+--- a/src/runtime/runtime_bus_bridge.cpp
++++ b/src/runtime/runtime_bus_bridge.cpp
+@@ -988,6 +988,20 @@ void runtime_set_vblank_input_hook(std::function<void()> h) {
+     g_vblank_input_hook = std::move(h);
+ }
+ 
++// Diagnostic: names the condition that makes runtime_should_yield() unwind.
++extern "C" const char* runtime_yield_reason(void) {
++    auto* bus = gbarecomp::g_active_bus;
++    if (g_session_execution) return "session";
++    if (!g_runtime_force_interp_step_active && g_runtime_force_interp_hook &&
++        g_runtime_force_interp_hook(g_cpu.R[15] & ~1u,
++                                    (g_cpu.cpsr & CPSR_T_BIT) != 0 ? 1 : 0))
++        return "force_interp_hook";
++    if (g_frame_present_quit) return "present_quit";
++    if (bus && bus->io().halted()) return "halted";
++    if (g_runtime_break_pc != 0u && g_cpu.R[15] == g_runtime_break_pc) return "break_pc";
++    return "none";
++}
++
+ extern "C" bool runtime_should_yield(void) {
+     if (g_session_execution) {
+         if (gbarecomp::runtime_dispatch_suspended()) return true;
+diff --git a/tools/link_session/netplay_probe.cpp b/tools/link_session/netplay_probe.cpp
+index 0327b3d..2d5eacf 100644
+--- a/tools/link_session/netplay_probe.cpp
++++ b/tools/link_session/netplay_probe.cpp
+@@ -3,6 +3,7 @@
+ #include "multiplayer_pacing.h"
+ #include <retcomm_rbengine/mono_ms.h>
+ #include <charconv>
++#include <algorithm>
+ #include <chrono>
+ #include <cstdio>
+ #include <cstdlib>
+@@ -40,6 +41,11 @@ void gba_link_probe_netplay(gbarecomp::GbaMultiplayerSession& simulation,unsigne
+         options.network.input_delay=number("GBA_LINK_PROBE_NET_DELAY",20);
+     options.identity=identity; options.build_fingerprint=0x47424102;
+     options.rollback=!mode || std::string_view(mode)!="0";
++    if (std::getenv("GBA_LINK_PROBE_NET_SAFE")) {
++        options.rollback=false;
++        options.network.input_delay=std::max<rnet_u8>(options.network.input_delay,6);
++        options.connection_grace_ms=0;
++    }
+     options.restored_pair=simulation.cycle()!=0;
+     GbaNetplayMatch match(simulation,std::move(options));
+     match.sample_local=[&](std::uint32_t tick) { return input(tick)[seat]; };

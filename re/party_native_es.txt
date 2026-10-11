@@ -1,0 +1,46 @@
+# idioma espanol, titulo, bajar a Modo Multijugador
+720 - - -
+4 D D D
+30 - - -
+4 R R R
+30 - - -
+4 A A A
+180 - - -
+shot party_title
+4 S S S
+90 - - -
+shot party_menu
+4 D D D
+30 - - -
+4 A A A
+150 - - -
+4 A A A
+150 - - -
+4 A A A
+200 - - -
+4 A A A
+60 - - -
+4 R R L
+8 - - -
+4 R - -
+8 - - -
+60 - - -
+shot party_class
+4 A A A
+120 - - -
+shot party_color
+4 A A A
+200 - - -
+shot party_name0
+60 - - -
+shot party_name1
+4 S S S
+90 - - -
+shot party_confirm
+4 A A A
+300 - - -
+shot party_link
+4 A A A
+400 - - -
+shot party_game
+

@@ -3,7 +3,7 @@
 El netplay es técnicamente viable, pero sigue en fase experimental. Estas
 pruebas arrancan procesos independientes con ROM y BIOS propios, intercambian
 entradas por UDP y comparan los archivos `.paired` completos. Usan vídeo y
-audio dummy, guardados nuevos y entradas neutras. No recorren una partida
+audio dummy y entradas neutras o guiones por asiento según la prueba. No recorren una partida
 multijugador activa ni prueban Hamachi entre PCs.
 
 ## Resultados de esta revisión
@@ -17,6 +17,7 @@ La latencia indicada es por trayecto del proxy, no RTT. En la topología de
 | 3 | Delay-sync | 360 | 45 ms / ±15 ms / 1,5 % | Checkpoints idénticos, salidas 0 |
 | 4 | Rollback | 360 | 45 ms / ±15 ms / 1,5 % | Checkpoints idénticos, salidas 0 |
 | 4 | Delay-sync | 600 | 45 ms / ±15 ms / 1,5 % | Checkpoints idénticos, salidas 0 |
+| 4 | Perfil seguro | 360 | 45 ms / ±15 ms / 1,5 % | Checkpoints idénticos, salidas 0; 34,70 s |
 | 4 | Delay-sync | Objetivo 600 | Igual, corte del invitado 1 durante 2 s a los 6 s | Sin checkpoint al agotar 60 s |
 
 La prueba sin corte terminó en 26,06 s. La prueba con corte dejó todos los
@@ -31,6 +32,83 @@ fluidez percibida ni ausencia de lag. El tiempo total incluye arranque,
 transferencias de estado, ejecución y checkpoint; tampoco mide FPS de juego.
 
 ## Corrección aplicada
+
+### Revisión posterior con controles diferentes
+
+Se recuperó `PrimatesGBA/test/party.txt`, generado originalmente por
+`gen_party.ps1`. Su adaptación `re/party_native_es.txt` espera 720 ticks al
+arrancar, frente a 420 en el emulador antiguo. Capturas independientes
+confirmaron el menú en español y tres clases distintas. La secuencia aún
+requiere adaptación para completar la introducción y verificar combate
+enlazado; no se presenta una selección de clases como gameplay multijugador.
+
+`SS2LinkProbe` reutiliza el corpus compilado de la aplicación y las herramientas
+`gbarecomp/tools/link_session`. Ejecuta el mismo `GbaMultiplayerSession` y
+`GbaNetplayMatch`, con el dispatcher Flash instalado por consola. Su entrada
+de prueba cambia botones por asiento cada tres ticks. No automatiza el
+launcher, Discord ni la selección de mandos físicos. Los `.paired` de este
+probe son snapshots nativos de prueba, **no** archivos compatibles con
+`--netplay-resume` del launcher.
+
+| Tres procesos, 180 ticks desde selección de clases | Resultado |
+| --- | --- |
+| Rollback, loopback sin degradación, delay predeterminado | 1 tick reejecutado en cada proceso; snapshots idénticos |
+| Rollback, 45 ms / ±15 ms / 1,5 %, delay predeterminado | Snapshots idénticos; cero replay; no satisface `--require-replay` |
+| Rollback, 100 ms / ±60 ms / 2 %, delay solicitado de 2 | 16, 16 y 20 episodios RESIM observados; fallo `checkpoint state digest mismatch` |
+| Delay-sync, 100 ms / ±60 ms / 2 %, delay solicitado de 2 | Snapshots idénticos; salidas 0 |
+| Delay-sync, 45 ms / ±15 ms / 1,5 %, corte de 2 s | Snapshots idénticos; salidas 0; 14,84 s totales |
+| Perfil seguro, 45 ms / ±15 ms / 1,5 %, corte de 65 s | Snapshots idénticos; salidas 0; 79,14 s totales |
+
+El perfil seguro supera el timeout previo de 60 s de una sesión establecida
+sin avanzar el cable con entradas inventadas. La prueba larga conserva el
+mismo SHA-256 final que la prueba sin pérdida:
+`906882bd819c9acd4fa19886651ff2da9245570e33aecac0794ac91a1666a8ca`.
+El probe usado tiene SHA-256
+`a6668d802d66fd7b50c4dfb88e2c7ab5b72c3f33c4e0dfb78475cadd00a2f723`.
+
+Se observaron 1.461.378 datagramas en la prueba larga, incluidos 861.529
+descartados por el corte artificial. El tráfico excesivo requiere investigar
+retransmisiones antes de recomendar este perfil por VPN; el resultado confirma
+igualdad del estado, no eficiencia ni fluidez de red.
+La prueba del ejecutable con cuatro procesos también tuvo tráfico elevado:
+1.422.821 datagramas en 34,70 s, incluso sin corte. No parece limitado a la
+espera prolongada. Su SHA-256 es
+`09d37a14d5cd572b58136d92962c7543c8594dde13caba1d308cf6cdb8ad2384`.
+
+El estrés provoca correcciones reales, pero el rollback no logró acordar
+el checkpoint. La primera causa de esa diferencia aún no está localizada.
+El fallo se detectó y la herramienta no publicó un guardado divergente como
+válido. Durante el estrés se observaron aproximadamente 304–307 MiB por
+proceso, alrededor de 917 MiB en total; la cifra de 81 MiB de las pruebas
+neutras no describe esta carga.
+
+La prueba local con rollback reportó unos 11,6 FPS de avance; delay-sync con
+la red de estrés, unos 6,5 FPS. Ambas ejecutan nueve consolas en el mismo PC
+(tres por proceso), además del proxy. No permiten extrapolar rendimiento
+entre PCs ni afirmar que sea imperceptible. El online aún requiere correcciones
+de estabilidad y mediciones con gameplay real.
+
+Reproducción, usando únicamente estados locales derivados de la ROM propia:
+
+```text
+cmake -S . -B build -DSS2_BUILD_LINK_PROBE=ON
+cmake --build build --target SS2LinkProbe -j2
+py -3.12 re/test_party_recomp.py --stop party_class
+```
+
+El último comando imprime la carpeta de resultados. Usa su `party.state`
+como `ESTADO_LOCAL` en estas pruebas:
+
+```text
+py -3.12 re/test_netplay_local.py --players 3 --mode rollback --frames 180 --probe-state ESTADO_LOCAL --probe-inputs re/party_stress_inputs.txt --timeout 120
+py -3.12 re/test_netplay_local.py --players 3 --mode rollback --frames 180 --latency-ms 100 --jitter-ms 60 --loss 0.02 --input-delay 2 --require-replay --probe-state ESTADO_LOCAL --probe-inputs re/party_stress_inputs.txt --timeout 180
+py -3.12 re/test_netplay_local.py --players 3 --mode delay-sync --frames 180 --latency-ms 100 --jitter-ms 60 --loss 0.02 --input-delay 2 --probe-state ESTADO_LOCAL --probe-inputs re/party_stress_inputs.txt --timeout 120
+py -3.12 re/test_netplay_local.py --safe --players 3 --frames 180 --latency-ms 45 --jitter-ms 15 --loss 0.015 --blackout-at 6 --blackout-seconds 65 --probe-state ESTADO_LOCAL --probe-inputs re/party_stress_inputs.txt --timeout 120
+```
+
+El target de prueba requiere MinGW Makefiles y reutiliza los objetos del
+ejecutable para ahorrar compilación y RAM. El guion de navegación registra
+sus capturas y hashes en `re/run/`. No se incluyen estados, ROM ni BIOS en Git.
 
 La rutina Flash copiada a EWRAM en `02001688 Thumb` podía fallar en netplay.
 El callback global del jugador individual no se propagaba a los contextos

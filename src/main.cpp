@@ -9,6 +9,7 @@
 #include "ss2_flash_dispatch.h"
 #if defined(GBAGAME_NETPLAY)
 #include "multiplayer_launch.h"
+#include "ss2_netplay_policy.h"
 #include "multiplayer_session.h"
 #include "gba_netplay_build_identity.h"
 #endif
@@ -20,6 +21,13 @@
 namespace {
 
 #if defined(GBAGAME_NETPLAY)
+int (*ordinary_netplay_run)(const gbarecomp::GbaNetplayLaunch&,const gbarecomp::GbaNetplayBoot&)=nullptr;
+int safe_netplay_run(const gbarecomp::GbaNetplayLaunch& requested, const gbarecomp::GbaNetplayBoot& boot) {
+    auto launch=requested;
+    ss2::apply_safe_netplay_policy(launch);
+    return ordinary_netplay_run(launch,boot);
+}
+
 void setup_netplay_instance(gbarecomp::GbaInstance& instance) {
     // Each console restores its own execution context at every scheduler turn.
     // The single-player global hook alone does not survive that context switch.
@@ -33,7 +41,8 @@ void print_usage() {
         "  Direct-IP netplay (2-4 consoles, seat 0 hosts):\n"
         "    --netplay-players 4 --netplay-seat N --netplay-session ID\n"
         "    --netplay-bind IP:PORT [--netplay-peer HOST_IP:PORT]\n"
-        "    [--netplay-rollback | --netplay-delay-sync] [--netplay-delay 2..20]\n");
+        "    [--netplay-rollback | --netplay-delay-sync] [--netplay-delay 2..20]\n"
+        "    --netplay-safe: confirmed inputs, delay >=6, wait through network outages\n");
 }
 
 }  // namespace
@@ -51,6 +60,11 @@ int main(int argc, char** argv) {
     gbarecomp::RunOptions opts;
     std::vector<std::string> args(argv, argv + argc);
 #if defined(GBAGAME_NETPLAY)
+    bool safe_profile=false;
+    for (auto it=args.begin()+1; it!=args.end();) {
+        if (*it=="--netplay-safe") { safe_profile=true; it=args.erase(it); }
+        else ++it;
+    }
     // Content identity: SHA-256 of the supported Europe ROM.
     opts.netplay = gbarecomp::make_gba_netplay_launch("shining-soul-2-eu",
         GBARECOMP_NETPLAY_BUILD_ID,
@@ -60,6 +74,10 @@ int main(int argc, char** argv) {
     opts.netplay->max_players = 4;
     opts.netplay->player_count = 4;
     opts.netplay->view_policy = ss2::netplay_view_policy();
+    if (safe_profile) {
+        ordinary_netplay_run=opts.netplay->run;
+        opts.netplay->run=&safe_netplay_run;
+    }
     try { gbarecomp::parse_gba_netplay_arguments(args, *opts.netplay); }
     catch (const std::exception& e) {
         std::fprintf(stderr, "netplay: %s\n", e.what());
