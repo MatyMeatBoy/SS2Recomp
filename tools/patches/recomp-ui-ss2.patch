@@ -1,0 +1,158 @@
+diff --git a/src/common/backends/imgui/launcher_imgui.cpp b/src/common/backends/imgui/launcher_imgui.cpp
+index cf8cf35..eab194b 100644
+--- a/src/common/backends/imgui/launcher_imgui.cpp
++++ b/src/common/backends/imgui/launcher_imgui.cpp
+@@ -10814,6 +10814,55 @@ static bool np_mode_card(const LauncherTheme& th, const char* id, const char* ti
+     return pressed;
+ }
+ 
++static void draw_experimental_netplay(LauncherModel* m) {
++    if (!m->experimental_netplay_prepare) return;
++    if (m->experimental_netplay_open && !ImGui::IsPopupOpen("Netplay experimental - LAN / Hamachi"))
++        ImGui::OpenPopup("Netplay experimental - LAN / Hamachi");
++    ImGui::SetNextWindowSize(ImVec2(px(510), 0), ImGuiCond_Appearing);
++    if (!ImGui::BeginPopupModal("Netplay experimental - LAN / Hamachi", &m->experimental_netplay_open,
++            ImGuiWindowFlags_AlwaysAutoResize)) return;
++    ImGui::TextWrapped("Conexion directa con recuperacion automatica. Todos deben usar la misma version, sala y numero de jugadores.");
++    ImGui::Spacing();
++    ImGui::SliderInt("Jugadores", &m->experimental_players, 2, 4);
++    const char* seats[] = {"Anfitrion (jugador 1)", "Invitado (jugador 2)", "Invitado (jugador 3)", "Invitado (jugador 4)"};
++    if (m->experimental_seat >= m->experimental_players) m->experimental_seat = m->experimental_players - 1;
++    ImGui::Combo("Mi asiento", &m->experimental_seat, seats, m->experimental_players);
++    if (m->experimental_seat)
++        ImGui::InputText("IP del anfitrion", m->experimental_host, sizeof(m->experimental_host));
++    else
++        ImGui::TextWrapped("Comparte tu IPv4 de Hamachi con los invitados. Permite este programa en el firewall de esa red.");
++    ImGui::InputInt("Sala", &m->experimental_session, 1, 100);
++    ImGui::InputInt("Puerto TCP", &m->experimental_port, 1, 100);
++    ImGui::Spacing();
++    ImGui::TextWrapped("El juego espera a todos. Entra al multijugador dentro del juego. Si se corta la red, espera su regreso. Para otra partida usa otra sala.");
++    draw_netplay_view(m);
++    if (m->experimental_error[0]) ImGui::TextWrapped("%s", m->experimental_error);
++    const bool ready = launcher_model_can_launch(m) && m->experimental_session > 0 &&
++        m->experimental_port >= 1024 && m->experimental_port <= 65535;
++    if (!launcher_model_can_launch(m)) ImGui::TextWrapped("Selecciona primero una ROM y BIOS validos en el launcher.");
++    ImGui::BeginDisabled(!ready);
++    if (ImGui::Button(m->experimental_seat ? "Conectar" : "Crear sala", ImVec2(px(180), px(36)))) {
++        RecompLauncherCNetplayLaunch launch{};
++        if (!mod_commit_netplay_launch(m)) {
++            std::snprintf(m->experimental_error, sizeof(m->experimental_error), "%s", m->mod_status);
++        } else if (m->experimental_netplay_prepare(m->experimental_players, m->experimental_seat,
++                static_cast<uint32_t>(m->experimental_session), m->experimental_port,
++                m->experimental_host, &launch, m->experimental_error, sizeof(m->experimental_error))) {
++            m->s.netplay_launch = launch;
++            m->experimental_netplay_open = false;
++            m->action = LNG_ACTION_LAUNCH;
++            ImGui::CloseCurrentPopup();
++        }
++    }
++    ImGui::EndDisabled();
++    ImGui::SameLine();
++    if (ImGui::Button("Cancelar", ImVec2(px(110), px(36)))) {
++        m->experimental_netplay_open = false;
++        ImGui::CloseCurrentPopup();
++    }
++    ImGui::EndPopup();
++}
++
+ void draw_netplay_mode_page(LauncherModel* m, const LauncherTheme& th) {
+     draw_netplay_view(m);
+     /* Pump here too, not only on the browser page. The backend does its own
+@@ -12720,6 +12769,17 @@ void draw_footer(LauncherModel* m, const LauncherTheme& th, float footer_h) {
+         (m->view == LNG_VIEW_DASHBOARD || m->view == LNG_VIEW_SETTINGS ||
+          m->view == LNG_VIEW_CONTROLLER)) {
+         const float net_w = px(170.0f);
++        if (m->experimental_netplay_prepare) {
++            const float exp_w = px(225.0f);
++            ImGui::SetCursorScreenPos(ImVec2(play_x - net_w - exp_w - px(24.0f), cta_y));
++            if (ImGui::Button(m->experimental_netplay_label ? m->experimental_netplay_label : "Netplay (experimental)", ImVec2(exp_w, play_h))) {
++                m->experimental_error[0] = 0;
++                for (int i = 0; i < m->num_netplay_view_labels; ++i)
++                    if (std::strcmp(m->netplay_view_labels[i], "16:9") == 0 && m->s.netplay_view_index == 0)
++                        m->s.netplay_view_index = i;
++                m->experimental_netplay_open = true;
++            }
++        }
+         ImGui::SetCursorScreenPos(ImVec2(play_x - net_w - px(12.0f), cta_y));
+         if (ImGui::Button(ui_text("NETPLAY"), ImVec2(net_w, play_h))) {
+             /* The fork first. Connecting used to start here, which meant a LAN
+@@ -14164,6 +14224,7 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
+     draw_netplay_host_modal(m, th);
+     draw_netplay_password_modal(m, th);
+     draw_netplay_direct_modal(m, th);
++    draw_experimental_netplay(m);
+     draw_netplay_automatch_modal(m, th);
+     draw_netplay_moderation_modal(m, th);
+     draw_netplay_report_modal(m, th);
+diff --git a/src/common/launcher_debug.c b/src/common/launcher_debug.c
+index 458c2cb..ef11282 100644
+--- a/src/common/launcher_debug.c
++++ b/src/common/launcher_debug.c
+@@ -194,6 +194,18 @@ static bool launcher_debug_step_impl(LauncherPlatform* p, LauncherModel* m) {
+             launcher_model_set_view(m, LNG_VIEW_NETPLAY);
+         }
+         else if (strcmp(v, "lobby") == 0) launcher_model_set_view(m, LNG_VIEW_LOBBY);
++    } else if (strncmp(c, "experimental:", 13) == 0 && m->experimental_netplay_prepare) {
++        sscanf(c + 13, "%d,%d,%d,%d,%63s", &m->experimental_players,
++            &m->experimental_seat, &m->experimental_session, &m->experimental_port,
++            m->experimental_host);
++        m->experimental_netplay_open = true;
++    } else if (strcmp(c, "experimental_launch") == 0 && m->experimental_netplay_prepare) {
++        if (launcher_model_can_launch(m) && m->experimental_netplay_prepare(
++                m->experimental_players, m->experimental_seat, m->experimental_session,
++                m->experimental_port, m->experimental_host, &m->s.netplay_launch,
++                m->experimental_error, sizeof(m->experimental_error)))
++            m->action = LNG_ACTION_LAUNCH;
++        else fprintf(stderr, "[dbg] experimental launch refused: %s\n", m->experimental_error);
+     } else if (strncmp(c, "player:", 7) == 0) {
+         // Select which player the Controller view configures. Clamp to the
+         // launcher's real player range (N64 profiles run up to 4) instead of
+diff --git a/src/common/launcher_model.c b/src/common/launcher_model.c
+index 0e22e75..a0d720b 100644
+--- a/src/common/launcher_model.c
++++ b/src/common/launcher_model.c
+@@ -572,6 +572,11 @@ void launcher_model_init(LauncherModel* m,
+         m->has_shader           = game->has_shader != 0;
+         m->netplay_supported    = game->netplay_supported != 0 && game->netplay != NULL;
+         m->netplay              = game->netplay;
++        m->experimental_netplay_label = game->experimental_netplay_label;
++        m->experimental_netplay_prepare = game->experimental_netplay_prepare;
++        m->experimental_players = 2;
++        m->experimental_port = 19740;
++        m->experimental_session = 24681;
+         m->netplay_mode_changed = game->netplay_mode_changed;
+         m->netplay_view_labels = game->netplay_view_labels;
+         m->num_netplay_view_labels = m->netplay_supported && game->netplay_view_labels
+diff --git a/src/common/launcher_model.h b/src/common/launcher_model.h
+index 1e7fc30..e0a0015 100644
+--- a/src/common/launcher_model.h
++++ b/src/common/launcher_model.h
+@@ -367,6 +367,12 @@ typedef struct {
+     bool has_run_ahead;
+     bool has_shader;
+     bool netplay_supported;
++    const char* experimental_netplay_label;
++    int (*experimental_netplay_prepare)(int, int, uint32_t, int, const char*,
++        RecompLauncherCNetplayLaunch*, char*, size_t);
++    bool experimental_netplay_open;
++    int experimental_players, experimental_seat, experimental_port, experimental_session;
++    char experimental_host[64], experimental_error[256];
+     bool netplay_policy_active;
+     void (*netplay_mode_changed)(int enabled);
+     const char* const* netplay_view_labels;
+diff --git a/src/recomp_launcher.h b/src/recomp_launcher.h
+index 5ac76bd..e320ae3 100644
+--- a/src/recomp_launcher.h
++++ b/src/recomp_launcher.h
+@@ -2356,6 +2356,11 @@ typedef struct RecompLauncherCGameInfo {
+     const char*        quality_reason;
+     void (*quality_apply)(int preset, RecompLauncherCSettings* s);
+     int  (*quality_redetect)(void);
++    /* Optional host-owned direct recovery profile. Zero-init hides it. */
++    const char* experimental_netplay_label;
++    int (*experimental_netplay_prepare)(int players, int seat, uint32_t session,
++        int port, const char* host, RecompLauncherCNetplayLaunch* out,
++        char* error, size_t error_cap);
+ } RecompLauncherCGameInfo;
+ #define RECOMP_LAUNCHER_HAS_NETPLAY_VIEW 1
+ #define RECOMP_LAUNCHER_HAS_ROM_PATTERNS 1

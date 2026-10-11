@@ -1,0 +1,109 @@
+[
+  {
+    "elapsed": 11.2,
+    "exit_codes": [
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 0,
+    "executable_sha256": "30736d328f15f45eb82a9e03ad4a0993f2237c801909b02787fc58873c512b61",
+    "state_sha256": {
+      "seat0": "1f5d1d2b2e3001643600141e93a8186cbb216a711b735a6a51d9a822a4981be5",
+      "seat1": "1f5d1d2b2e3001643600141e93a8186cbb216a711b735a6a51d9a822a4981be5"
+    },
+    "passed": true,
+    "scenario": {
+      "native": true,
+      "launcher": true,
+      "players": 2,
+      "fault": "watchdog",
+      "frames": 120,
+      "at": 30,
+      "cut_seconds": 12
+    }
+  },
+  {
+    "elapsed": 11.2,
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 0,
+    "executable_sha256": "30736d328f15f45eb82a9e03ad4a0993f2237c801909b02787fc58873c512b61",
+    "state_sha256": {
+      "seat0": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d",
+      "seat1": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d",
+      "seat2": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d",
+      "seat3": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d"
+    },
+    "passed": true,
+    "scenario": {
+      "native": true,
+      "launcher": true,
+      "players": 4,
+      "fault": "none",
+      "frames": 120,
+      "at": 60,
+      "cut_seconds": 12
+    }
+  },
+  {
+    "elapsed": 32.2,
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 10829984,
+    "executable_sha256": "30736d328f15f45eb82a9e03ad4a0993f2237c801909b02787fc58873c512b61",
+    "state_sha256": {
+      "seat0": "d149650fdf3aefa6155988d33536e5821ac2bccc1b8bf41a8ff2d638f3a4560e",
+      "seat1": "d149650fdf3aefa6155988d33536e5821ac2bccc1b8bf41a8ff2d638f3a4560e",
+      "seat2": "d149650fdf3aefa6155988d33536e5821ac2bccc1b8bf41a8ff2d638f3a4560e"
+    },
+    "passed": true,
+    "scenario": {
+      "native": true,
+      "launcher": true,
+      "players": 3,
+      "fault": "network",
+      "frames": 120,
+      "at": 30,
+      "cut_seconds": 12.0
+    }
+  },
+  {
+    "elapsed": 7.09,
+    "exit_codes": [
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 0,
+    "executable_sha256": "30736d328f15f45eb82a9e03ad4a0993f2237c801909b02787fc58873c512b61",
+    "state_sha256": {
+      "seat0": "8b003bfa5983ea906ec1caeb4b5e2f6afb98b7831536c99c0324da9144c86248",
+      "seat1": "8b003bfa5983ea906ec1caeb4b5e2f6afb98b7831536c99c0324da9144c86248"
+    },
+    "passed": true,
+    "scenario": {
+      "native": true,
+      "launcher": true,
+      "players": 2,
+      "fault": "none",
+      "frames": 90,
+      "at": 60,
+      "cut_seconds": 12,
+      "extracted_release": true
+    }
+  }
+]

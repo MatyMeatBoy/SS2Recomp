@@ -7,6 +7,9 @@
 #include "runtime.h"
 #include "ss2_extended_view.h"
 #include "ss2_flash_dispatch.h"
+#if defined(GBAGAME_RECOMP_UI)
+#include "ss2_launcher_profile.h"
+#endif
 #if defined(GBAGAME_NETPLAY)
 #include "multiplayer_launch.h"
 #include "ss2_netplay_policy.h"
@@ -25,6 +28,7 @@ namespace {
 
 #if defined(GBAGAME_NETPLAY)
 int (*ordinary_netplay_run)(const gbarecomp::GbaNetplayLaunch&,const gbarecomp::GbaNetplayBoot&)=nullptr;
+bool cli_safe_profile=false;
 int safe_netplay_run(const gbarecomp::GbaNetplayLaunch& requested, const gbarecomp::GbaNetplayBoot& boot) {
     auto launch=requested;
     ss2::apply_safe_netplay_policy(launch);
@@ -33,6 +37,16 @@ int safe_netplay_run(const gbarecomp::GbaNetplayLaunch& requested, const gbareco
         return ss2::run_recoverable_netplay(launch,boot);
 #endif
     return ordinary_netplay_run(launch,boot);
+}
+
+int selected_netplay_run(const gbarecomp::GbaNetplayLaunch& launch, const gbarecomp::GbaNetplayBoot& boot) {
+    bool recovery = cli_safe_profile;
+#if defined(GBAGAME_RECOMP_UI)
+    if (ss2::launcher_recovery_selected)
+        return ss2::supervise_launcher_recovery(launch, boot);
+    recovery = recovery || ss2::launcher_recovery_selected;
+#endif
+    return recovery ? safe_netplay_run(launch, boot) : ordinary_netplay_run(launch, boot);
 }
 
 void setup_netplay_instance(gbarecomp::GbaInstance& instance) {
@@ -81,10 +95,9 @@ int main(int argc, char** argv) {
     opts.netplay->max_players = 4;
     opts.netplay->player_count = 4;
     opts.netplay->view_policy = ss2::netplay_view_policy();
-    if (safe_profile) {
-        ordinary_netplay_run=opts.netplay->run;
-        opts.netplay->run=&safe_netplay_run;
-    }
+    cli_safe_profile=safe_profile;
+    ordinary_netplay_run=opts.netplay->run;
+    opts.netplay->run=&selected_netplay_run;
     try { gbarecomp::parse_gba_netplay_arguments(args, *opts.netplay); }
     catch (const std::exception& e) {
         std::fprintf(stderr, "netplay: %s\n", e.what());

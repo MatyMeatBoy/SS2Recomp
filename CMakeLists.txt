@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(ShiningSoul2Recomp VERSION 0.2.0 LANGUAGES C CXX)
+project(ShiningSoul2Recomp VERSION 0.2.1 LANGUAGES C CXX)
 
 option(SS2_BUILD_LINK_PROBE "Build the headless scripted multiplayer qualification tool" OFF)
 
@@ -133,7 +133,7 @@ endif()
 option(GBAGAME_RECOMP_UI "Build the recomp-ui pre-boot launcher" ON)
 if(GBAGAME_RECOMP_UI)
     include(${RECOMP_UI_ROOT}/recomp_ui.cmake)
-    add_library(game_launcher_ui STATIC src/game_launcher_boot.cpp)
+    add_library(game_launcher_ui STATIC src/game_launcher_boot.cpp src/ss2_launcher_profile.cpp src/ss2_launcher_supervisor.cpp)
     target_include_directories(game_launcher_ui PRIVATE
         "${GBARECOMP_ROOT}/src/runtime"
         "${GBARECOMP_ROOT}/src/gba"
@@ -152,6 +152,8 @@ if(GBAGAME_RECOMP_UI)
         target_link_libraries(game_launcher_ui PUBLIC opengl32)
     endif()
     target_link_libraries(ShiningSoul2Recomp PRIVATE game_launcher_ui)
+    recomp_stage_launcher_assets(ShiningSoul2Recomp CONSOLE gba
+        BOXART ${CMAKE_CURRENT_SOURCE_DIR}/recomp/launcher/boxart.tga)
     set_property(SOURCE src/main.cpp APPEND PROPERTY
         COMPILE_DEFINITIONS GBAGAME_RECOMP_UI)
 endif()

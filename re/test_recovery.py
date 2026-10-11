@@ -5,6 +5,8 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser()
 p.add_argument('--native',action='store_true')
+p.add_argument('--launcher',action='store_true',help='Exercise the hidden experimental launcher and its supervisor')
+p.add_argument('--executable',type=Path,help='Qualify an extracted release executable')
 p.add_argument('--players',type=int,choices=[2,3,4],default=2)
 p.add_argument('--fault',choices=['none','guest','host','network','desync','watchdog'],default='none')
 p.add_argument('--frames',type=int,default=180)
@@ -15,11 +17,13 @@ p.add_argument('--inputs',type=Path)
 p.add_argument('--timeout',type=float,default=120)
 a=p.parse_args()
 if a.fault=='watchdog' and not a.native:p.error('Watchdog qualification requires --native')
+if a.launcher and (not a.native or a.fault not in ('none','desync','network','watchdog')):p.error('Launcher tests require native; abrupt parent termination is unsupported')
 if a.fault!='none' and a.frames<=a.at+30:p.error('Fault tests need frames > at + 30')
 if a.initial_state and a.players!=3:p.error('Current native class fixture has three consoles')
 out=ROOT/'re/run'/f'recovery-{a.players}-{"native" if a.native else "protocol"}-{a.fault}-{time.time_ns()}'
 out.mkdir(parents=True)
 exe=ROOT/'build/netplay-testing'/('ShiningSoul2Recomp.exe' if a.native else 'SS2RecoveryProtocolTest.exe')
+if a.executable:exe=a.executable.resolve()
 port=22170; proxyport=22180
 env=dict(os.environ,SDL_VIDEODRIVER='dummy',SDL_AUDIODRIVER='dummy',SDL_RENDER_DRIVER='software')
 processes={};logs=[];commands={};peer_envs={};restart_count=0
@@ -41,6 +45,8 @@ def close_pair(s):
 
 def progress(seat):
     text=(out/f'peer{seat}.log').read_text(errors='replace')
+    worker=out/f'seat{seat}/game.stdout.log'
+    if worker.exists():text+=worker.read_text(errors='replace')
     matches=re.findall(r'(?:recovery )?committed=(\d+)',text)
     return max(map(int,matches),default=0)
 
@@ -62,11 +68,19 @@ try:
                 SS2_RECOVERY_STATE_OUT=str(directory/'final.state'))
             if a.initial_state:peer_envs[seat]['SS2_RECOVERY_INITIAL_STATE']=str(a.initial_state.resolve())
             if a.inputs:peer_envs[seat]['SS2_RECOVERY_INPUTS']=str(a.inputs.resolve())
+            if a.launcher:
+                commands[seat]=[str(exe),'--launcher','--bios',str(ROOT/'build/gba_bios.bin'),
+                    '--rom',str(ROOT/'roms/shining_soul_2_europe.gba'),'--volume','0','--scale','1',
+                    '--frames',str(a.frames),'--save-path',str(directory/'solo.sav'),str(ROOT/'game.toml')]
+                peer_envs[seat].pop('SDL_VIDEODRIVER',None)
+                peer_envs[seat]['LNG_TEST_HIDDEN']='1'
+                uiport=proxyport if a.fault=='network' and seat else port
+                peer_envs[seat]['LNG_SCRIPT']=f'wait:25;experimental:{a.players},{seat},72111,{uiport},127.0.0.1;wait:5;experimental_launch'
             if a.fault=='desync' and seat==1:peer_envs[seat]['SS2_RECOVERY_CORRUPT_AT']=str(a.at)
             if a.fault=='watchdog' and seat==1:
                 peer_envs[seat]['SS2_RECOVERY_TEST_CRASH_AT']=str(a.at)
-                # The script uses the root build binary, as the distributed BAT does.
-                commands[seat]=['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'tools/run_recoverable.ps1'),*commands[seat][1:]]
+                if not a.launcher:
+                    commands[seat]=['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'tools/run_recoverable.ps1'),*commands[seat][1:]]
         else:
             # The host binds the real port; guests dial a proxy for network faults.
             commands[seat]=[str(exe),str(seat),str(a.players),str(port if seat==0 else (proxyport if a.fault=='network' else port)),str(a.frames),str(directory),str(a.at if a.fault=='desync' and seat==1 else 0)]
@@ -118,7 +132,9 @@ try:
         executable_sha256=hashlib.sha256(exe.read_bytes()).hexdigest())
 finally:
     for process in processes.values():
-        if process.poll() is None:process.kill()
+        if process.poll() is None:
+            if a.launcher:subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW)
+            else:process.kill()
         process.wait(timeout=5)
     for f in logs:f.close()
     for s in list(pairs):close_pair(s)

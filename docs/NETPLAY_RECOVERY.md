@@ -1,4 +1,4 @@
-# Recuperación automática — v0.2.0 (experimental)
+# Recuperación automática — v0.2.1 (experimental)
 
 En Windows, `--netplay-safe` con direcciones directas activa TCP recuperable
 para 2–4 jugadores. El UDP de recomp-net permanece disponible iniciando el
@@ -7,13 +7,12 @@ esta recuperación no se aplica a ese servicio.
 
 ## Inicio
 
-1. Abre el launcher normal una vez y selecciona tu ROM y BIOS propios.
-2. El host ejecuta `Online Host.bat`; el invitado, `Online Invitado.bat`, e
-   introduce la IP de Hamachi o el nombre del host. Ambos usan dos jugadores,
-   puerto TCP 19740 y sesión 24680 por defecto.
-3. Para cuatro participantes: host con `-Players 4`; invitados con
-   `-Players 4 -Seat 1`, `-Seat 2` y `-Seat 3`. `-HostAddress IP` evita la pregunta.
-4. Usa el mismo `-Session NUMERO` en todos. Una sesión nueva inicia otra partida;
+1. Ejecuta `build/ShiningSoul2Recomp.exe` y selecciona tu ROM y BIOS propios.
+2. Abre **Netplay (experimental)**. El host selecciona **Anfitrión** y crea sala;
+   cada invitado introduce su IP de Hamachi y elige un asiento diferente.
+3. Selecciona 2–4 participantes; todos deben indicar la misma cantidad, puerto
+   TCP (19740 por defecto) e ID de sala (24681 por defecto).
+4. Usa el mismo ID en todos. Una sesión nueva inicia otra partida;
    reutilizar la sesión existente recupera su último estado confirmado.
 
 Hamachi es opcional: sirve una LAN o VPN que permita TCP entre los PCs. Si usas
@@ -28,7 +27,7 @@ TLS ni autorización de la primera entrada mediante un servicio público.
   estado del host; sus saves individuales antiguos no reemplazan la partida.
 - Reinicio del host: recupera su checkpoint y reproduce el diario de controles
   confirmados, verificando cada digest, antes de reunir otra vez a los invitados.
-- Crash de Windows del ejecutable: el BAT supervisa el proceso y lo relanza.
+- Crash de Windows del ejecutable: el launcher inicia un supervisor interno que lo relanza.
   Un cierre normal o un error de validación no provoca un bucle de reinicios.
 - Divergencia transitoria: vuelve al estado confirmado del host y espera una
   barrera de digests iguales. Tres reparaciones fallidas en el mismo tick

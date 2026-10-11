@@ -24,6 +24,29 @@ index 3d07d55..a72829d 100644
              runtime_trace_dump_recent(160);
              break;
          }
+diff --git a/src/runtime/launcher_seam.h b/src/runtime/launcher_seam.h
+index 6609185..2c93c76 100644
+--- a/src/runtime/launcher_seam.h
++++ b/src/runtime/launcher_seam.h
+@@ -657,7 +657,7 @@ inline int gbarecomp_launcher_preboot(std::vector<std::string>& args,
+     }
+     if (const char* env = std::getenv("GBARECOMP_NO_LAUNCHER"))
+         if (env[0] && env[0] != '0') skip_once = true;
+-    if (headless || (skip_once && !force_launcher) || (opts.netplay && opts.netplay->enabled)) return 0;
++    if ((headless && !force_launcher) || (skip_once && !force_launcher) || (opts.netplay && opts.netplay->enabled)) return 0;
+ 
+     const std::string dir = exe_dir(args);
+     const auto state_path = [&](const char* filename,
+@@ -900,6 +900,9 @@ inline int gbarecomp_launcher_preboot(std::vector<std::string>& args,
+ #endif
+ 
+     char picked_rom[1024] = {0};
++#ifdef GBARECOMP_CUSTOMIZE_LAUNCHER_GAME_INFO
++    GBARECOMP_CUSTOMIZE_LAUNCHER_GAME_INFO(gi);
++#endif
+     int rc = recomp_launcher_run_window(title.c_str(), &ls, &gi, dir.c_str(),
+                                         seed_rom.c_str(),
+                                         picked_rom, sizeof(picked_rom));
 diff --git a/src/runtime/multiplayer_launch.h b/src/runtime/multiplayer_launch.h
 index 3be2484..0a1d1e8 100644
 --- a/src/runtime/multiplayer_launch.h

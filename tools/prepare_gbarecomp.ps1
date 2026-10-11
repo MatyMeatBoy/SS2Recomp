@@ -21,3 +21,13 @@ if ($LASTEXITCODE -eq 0) {
     if ($LASTEXITCODE -ne 0) { throw 'Cannot apply runtime patch.' }
     Write-Host 'Shining Soul II runtime patch applied.'
 }
+$ss2Ui = Join-Path $root 'recomp-ui'
+$ss2UiPatch = Join-Path $PSScriptRoot 'patches/recomp-ui-ss2.patch'
+git -C $ss2Ui apply --reverse --check $ss2UiPatch 2>$null
+if ($LASTEXITCODE -ne 0) {
+    git -C $ss2Ui apply --check $ss2UiPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Launcher patch conflicts with local changes.' }
+    git -C $ss2Ui apply $ss2UiPatch
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot apply launcher patch.' }
+}
+Write-Host 'Shining Soul II experimental launcher patch ready.'

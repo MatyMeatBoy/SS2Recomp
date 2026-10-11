@@ -1,5 +1,34 @@
 # Validación del netplay — 2026-10-11
 
+## v0.2.1: integración del launcher
+
+El nuevo binario tiene SHA-256
+`30736d328f15f45eb82a9e03ad4a0993f2237c801909b02787fc58873c512b61`.
+Las siguientes pruebas arrancaron el launcher oculto, prepararon la sala con
+su callback experimental y lanzaron el supervisor interno y el juego:
+
+| Consolas | Escenario | Resultado |
+| --- | --- | --- |
+| 2 | Crash NTSTATUS de invitado en tick 30; reinicio automático | 120 ticks, estados iguales, 11,20 s |
+| 4 | Arranque de cuatro participantes desde el launcher | 120 ticks, estados iguales, 11,20 s |
+| 3 | Selección de clases, controles distintos, corte TCP de 12 s | 120 ticks, estados iguales, 32,20 s |
+| 2 | ZIP extraído: launcher y supervisor desde el paquete distribuido | 90 ticks, estados iguales, 7,09 s |
+
+También se inspeccionaron capturas del dashboard y del panel experimental:
+portada original, botones separados y controles de cuatro asientos visibles.
+No se abrieron ventanas visibles ni se reprodujo audio durante las pruebas.
+Las pruebas GUI usan el script de diagnóstico para completar la selección;
+no representan una sesión manual completa ni una prueba entre casas.
+
+```text
+py -3.12 re/test_recovery.py --native --launcher --players 4 --frames 120
+py -3.12 re/test_recovery.py --native --launcher --players 2 --frames 120 --at 30 --fault watchdog
+```
+
+El resumen público está en `docs/recovery-v0.2.1-results.json`. Se mantienen
+los límites de combate prolongado, Discord en vivo y Hamachi remoto pendientes.
+El botón experimental no modifica el transporte de las salas recomp-net.
+
 ## v0.2.0: perfil TCP recuperable
 
 Pruebas locales con procesos independientes, vídeo/audio dummy y comparación

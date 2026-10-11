@@ -1,3 +1,5 @@
+#include "ss2_launcher_profile.h"
+#define GBARECOMP_CUSTOMIZE_LAUNCHER_GAME_INFO(gi) ss2::configure_launcher_profile(gi)
 #include "launcher_seam.h"
 
 #include "game_launcher_boot.h"

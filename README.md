@@ -24,7 +24,7 @@ salas/netplay de recomp-ui.
 | Netplay 2 jugadores | Integrado |
 | Netplay 3–4 jugadores | Integrado; delay-sync recomendado |
 | Rollback 4 jugadores | Experimental, probado con red degradada |
-| Release experimental Windows x64 | [v0.2.0](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.0) |
+| Release Windows x64 | [v0.2.1](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.1) |
 
 La prioridad de esta etapa es ampliar las pruebas entre PCs reales, cubrir más
 escenas del juego y validar reconexión durante una partida prolongada.
@@ -56,7 +56,7 @@ conservan composición nativa centrada.
 
 ## Multijugador
 
-El perfil recomendado de esta versión es `Online Host.bat` / `Online Invitado.bat`:
+El perfil recomendado de esta versión es el botón **Netplay (experimental)**:
 TCP directo con recuperación automática para 2–4 jugadores. Se verificaron
 cortes de 65 segundos, reinicio del host, del invitado y divergencia transitoria
 en pruebas locales. [Configuración y límites](docs/NETPLAY_RECOVERY.md).
@@ -136,9 +136,9 @@ para fijar la versión de recomp-net usada por esta release.
 
 ### Online recuperable (Windows, experimental)
 
-`Online Host.bat` y `Online Invitado.bat` conectan por TCP directo con recuperación
+El botón **Netplay (experimental)** conecta por TCP directo con recuperación
 automática de cortes y reentrada de procesos. El host conserva un checkpoint y
-un diario de controles confirmados; el BAT también supervisa crashes de Windows.
+un diario de controles confirmados; un supervisor interno recupera crashes de Windows.
 Compatible con 2–4 participantes en LAN o VPN/Hamachi. Puede pausar durante la
 espera; el host original debe volver. El modo UDP/rollback y el relay anterior
 siguen disponibles, con sus límites de validación.

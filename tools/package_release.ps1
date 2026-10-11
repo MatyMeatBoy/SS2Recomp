@@ -1,4 +1,4 @@
-param([string]$Version = '0.2.0')
+param([string]$Version = '0.2.1', [string]$BuiltExecutable = 'build/netplay-testing/ShiningSoul2Recomp.exe')
 $ErrorActionPreference = 'Stop'
 $ss2Root = Split-Path -Parent $PSScriptRoot
 $ss2Name = "ShiningSoul2Recomp-v$Version-windows-x64"
@@ -6,21 +6,29 @@ $ss2Stage = Join-Path $ss2Root "release-stage/$ss2Name"
 if (Test-Path -LiteralPath $ss2Stage) { throw 'Release staging directory already exists.' }
 New-Item -ItemType Directory -Path $ss2Stage | Out-Null
 $ss2Files = @(
- 'Jugar ShiningSoul2Recomp.bat', 'Jugar ShiningSoul2Recomp Online Seguro.bat',
- 'Online Host.bat', 'Online Invitado.bat', 'README.md', 'LICENSE',
- 'tools/run_recoverable.ps1', 'tools/online_room.ps1',
- 'docs/NETPLAY_RECOVERY.md', 'docs/NETPLAY_VALIDATION.md', 'docs/recovery-v0.2.0-results.json',
- 'docs/RELEASE_v0.2.0.md', 'build/ShiningSoul2Recomp.exe', 'build/SDL2.dll',
+ 'Jugar ShiningSoul2Recomp.bat', 'README.md', 'LICENSE',
+ 'tools/run_recoverable.ps1',
+ 'docs/NETPLAY_RECOVERY.md', 'docs/NETPLAY_VALIDATION.md', 'docs/recovery-v0.2.0-results.json', 'docs/recovery-v0.2.1-results.json',
+ "docs/RELEASE_v$Version.md", 'recomp/launcher/NOTICE.md', 'build/ShiningSoul2Recomp.exe', 'build/SDL2.dll',
  'build/mods/state.toml',
  'build/mods/packages/shining-soul-2.enhancement.adaptive-view/1.0.0/manifest.toml'
 )
 foreach ($ss2File in $ss2Files) {
  $ss2Source = Join-Path $ss2Root $ss2File
+ if ($ss2File -eq 'build/ShiningSoul2Recomp.exe') { $ss2Source = Join-Path $ss2Root $BuiltExecutable }
  $ss2Destination = Join-Path $ss2Stage $ss2File
  New-Item -ItemType Directory -Path (Split-Path -Parent $ss2Destination) -Force | Out-Null
  Copy-Item -LiteralPath $ss2Source -Destination $ss2Destination
 }
-Copy-Item -LiteralPath (Join-Path $ss2Root 'docs/RELEASE_v0.2.0.md') -Destination (Join-Path $ss2Stage 'RELEASE_NOTES.md')
+Copy-Item -LiteralPath (Join-Path $ss2Root "docs/RELEASE_v$Version.md") -Destination (Join-Path $ss2Stage 'RELEASE_NOTES.md')
+$ss2AssetRoot = Join-Path (Split-Path -Parent (Join-Path $ss2Root $BuiltExecutable)) 'assets'
+foreach ($ss2Asset in (Get-ChildItem -LiteralPath $ss2AssetRoot -Recurse -File)) {
+ if ($ss2Asset.Extension -notin @('.tga','.png','.ttf','.md')) { throw "Unexpected launcher asset: $($ss2Asset.Name)" }
+ $ss2AssetRelative = $ss2Asset.FullName.Substring($ss2AssetRoot.Length + 1)
+ $ss2AssetDestination = Join-Path $ss2Stage "build/assets/$ss2AssetRelative"
+ New-Item -ItemType Directory -Path (Split-Path -Parent $ss2AssetDestination) -Force | Out-Null
+ Copy-Item -LiteralPath $ss2Asset.FullName -Destination $ss2AssetDestination
+}
 $ss2Licenses = @{
  'gbarecomp/LICENSE' = 'gbarecomp.txt'
  'recomp-ui/LICENSE' = 'recomp-ui.txt'
