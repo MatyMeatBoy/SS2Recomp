@@ -1,3 +1,3 @@
 @echo off
 cd /d "%~dp0"
-start "" "%~dp0build\ShiningSoul2Recomp.exe" --netplay-safe --screen raw %*
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\run_recoverable.ps1" %*

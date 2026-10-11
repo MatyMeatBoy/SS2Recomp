@@ -1,40 +1,81 @@
-# Conservación de la sesión de cable
+# Recuperación automática — v0.2.0 (experimental)
 
-El perfil `--netplay-safe` usa entradas confirmadas, retraso mínimo de seis
-ticks y espera sin caducidad por silencio de red en una sesión establecida.
-Todos los participantes deben elegir el mismo perfil. El rollback sigue
-experimental y permanece disponible iniciando el juego normalmente.
+En Windows, `--netplay-safe` con direcciones directas activa TCP recuperable
+para 2–4 jugadores. El UDP de recomp-net permanece disponible iniciando el
+juego normalmente. Las salas con relay/Discord conservan el transporte previo:
+esta recuperación no se aplica a ese servicio.
 
-El scheduler espera los controles requeridos mientras continúa atendiendo UDP.
-No avanza CPU, temporizadores ni cable con controles inventados. Un corte puede
-congelar la imagen: conservar la igualdad no elimina la latencia. Salir
-explícitamente termina la sesión. Arranque y acuerdos de checkpoints mantienen
-sus plazos acotados.
+## Inicio
+
+1. Abre el launcher normal una vez y selecciona tu ROM y BIOS propios.
+2. El host ejecuta `Online Host.bat`; el invitado, `Online Invitado.bat`, e
+   introduce la IP de Hamachi o el nombre del host. Ambos usan dos jugadores,
+   puerto TCP 19740 y sesión 24680 por defecto.
+3. Para cuatro participantes: host con `-Players 4`; invitados con
+   `-Players 4 -Seat 1`, `-Seat 2` y `-Seat 3`. `-HostAddress IP` evita la pregunta.
+4. Usa el mismo `-Session NUMERO` en todos. Una sesión nueva inicia otra partida;
+   reutilizar la sesión existente recupera su último estado confirmado.
+
+Hamachi es opcional: sirve una LAN o VPN que permita TCP entre los PCs. Si usas
+IP pública, hace falta encaminamiento y permiso de firewall para el puerto TCP.
+El diseño está destinado a participantes conocidos en LAN/VPN; no incorpora
+TLS ni autorización de la primera entrada mediante un servicio público.
+
+## Qué recupera
+
+- Un corte de Wi-Fi: espera, reconecta cada segundo y reinstala el estado común.
+- Reinicio de un invitado: conserva su credencial local de asiento y recibe el
+  estado del host; sus saves individuales antiguos no reemplazan la partida.
+- Reinicio del host: recupera su checkpoint y reproduce el diario de controles
+  confirmados, verificando cada digest, antes de reunir otra vez a los invitados.
+- Crash de Windows del ejecutable: el BAT supervisa el proceso y lo relanza.
+  Un cierre normal o un error de validación no provoca un bucle de reinicios.
+- Divergencia transitoria: vuelve al estado confirmado del host y espera una
+  barrera de digests iguales. Tres reparaciones fallidas en el mismo tick
+  detienen la sesión con error en vez de avanzar con estados distintos.
+
+El juego puede pausarse durante cortes y confirmaciones. No se promete ausencia
+de lag ni rollback imperceptible. Todos siguen ejecutando todas las consolas
+con su cable; la red controla la admisión de ticks, no enchufa/desenchufa el cable
+in-game. Se descarta como máximo la transición tentativa todavía no confirmada.
+
+## Estado duradero y autoridad
+
+La autoridad es el host original. Cada transición usa controles de todos los
+asientos; todos ejecutan el frame y envían el digest de su estado completo.
+El host publica COMMIT sólo después de digests iguales y de escribir el registro
+correspondiente con flush de disco. Cada 120 ticks reemplaza atómicamente el
+checkpoint de todas las consolas y cable; el diario permite reconstruir los
+frames posteriores. Una escritura final incompleta se descarta; corrupción de
+registros completos, imágenes o identidad de build produce un error explícito.
+
+La recuperación conserva la sala, imágenes verificadas, configuración de
+consolas y generación de conexión. Los paquetes de una generación anterior
+no pueden convertirse en controles nuevos. La credencial privada de un asiento
+impide que otro proceso lo suplante tras su primera entrada; no debe compartirse.
+Los archivos quedan en `build/netplay/recovery/room-ID/seat-N` y no se distribuyen
+ni se suben al repositorio. Mantén esa carpeta para recuperar la sesión.
+
+## Límites
+
+El host debe volver en el mismo PC, con sus archivos y una dirección alcanzable.
+No hay migración automática a otro PC ni descubrimiento de una nueva IP fija.
+Si se usa un nombre DNS, se resuelve otra vez al reconectar. Todos necesitan la
+misma build, ROM y BIOS; la aplicación rechaza snapshots de otra identidad.
+La igualdad de estados con este protocolo no demuestra gameplay sin bugs ni
+rendimiento adecuado entre casas. Las pruebas de juego actuales usan selección
+de clases y arranque; falta combate prolongado y una prueba real por Hamachi.
 
 ## Fronteras para una futura decomp
 
-- Política: `src/ss2_netplay_policy.h`, separada de hardware y transporte.
-- Admisión: controles confirmados para cada tick y asiento.
-- Estado: todas las máquinas y cable juntos, nunca saves independientes.
-- Verificación: estados confirmados, no imágenes ni estado especulado.
-- Presentación: widescreen y ventanas fuera de la autoridad de inputs.
+`src/ss2_recovery.h` separa transporte/persistencia de la simulación mediante
+capture, restore, advance y controles por tick. El adaptador GBA está en
+`src/ss2_recovery_runner.cpp`. Una decomp puede cambiar ese adaptador conservando
+las barreras, autoridad e identidad; no se promete compatibilidad de snapshots.
+Widescreen, LUT de color, ventanas y sonido local quedan fuera de la autoridad.
 
-Reemplazar las máquinas por una decomp exige conservar estas fronteras y medir
-su determinismo. No garantiza compatibilidad con snapshots antiguos.
-
-## Recuperación pendiente
-
-El perfil tolera silencio temporal mientras los procesos y el mismo transporte
-siguen vivos. No implementa reentrada de un proceso nuevo, cambio de dirección,
-migración del hub ni reparación automática de un estado divergente. Eso exige
-identidad y generación de sesión, autenticación del asiento, checkpoint
-acordado, historial de controles y barrera de reanudación común. Una mayoría de
-hashes no demuestra por sí sola cuál estado es correcto.
-
-## Referencias primarias
-
-- [Mario Kart Super Circuit Recomp](https://github.com/mstan/MarioKartSuperCircuitRecomp/releases): referencia GBA de cable local replicado, rollback y archivos conjuntos. Su validación publicada de dos jugadores no prueba cuatro en Shining Soul II.
-- [psxrecomp NETPLAY](https://github.com/RetroPortingToolKit/psxrecomp/blob/master/docs/NETPLAY.md): separación entre admisión confirmada, digest y presentación; orientación arquitectónica, no código trasplantado.
-- [GGPO API](https://github.com/pond3r/ggpo/blob/master/src/include/ggponet.h): distingue interrupción, reanudación y desconexión y permite desactivar el timeout automático. Se conserva esa separación de política sin reemplazar recomp-net.
-
-Pruebas concretas y límites: [NETPLAY_VALIDATION.md](NETPLAY_VALIDATION.md).
+Referencias: [Mario Kart Recomp](https://github.com/mstan/MarioKartSuperCircuitRecomp/releases),
+[psxrecomp](https://github.com/RetroPortingToolKit/psxrecomp/blob/master/docs/NETPLAY.md)
+y [GGPO API](https://github.com/pond3r/ggpo/blob/master/src/include/ggponet.h).
+Se usaron para separar admisión, estado y liveness; el protocolo TCP de esta
+release es propio y no reemplaza el modo UDP/rollback experimental.

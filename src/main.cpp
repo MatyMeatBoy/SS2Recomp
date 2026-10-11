@@ -10,6 +10,9 @@
 #if defined(GBAGAME_NETPLAY)
 #include "multiplayer_launch.h"
 #include "ss2_netplay_policy.h"
+#if defined(_WIN32)
+#include "ss2_recovery_runner.h"
+#endif
 #include "multiplayer_session.h"
 #include "gba_netplay_build_identity.h"
 #endif
@@ -25,6 +28,10 @@ int (*ordinary_netplay_run)(const gbarecomp::GbaNetplayLaunch&,const gbarecomp::
 int safe_netplay_run(const gbarecomp::GbaNetplayLaunch& requested, const gbarecomp::GbaNetplayBoot& boot) {
     auto launch=requested;
     ss2::apply_safe_netplay_policy(launch);
+#if defined(_WIN32)
+    if (!launch.force_input_relay && !launch.bind_endpoint.empty())
+        return ss2::run_recoverable_netplay(launch,boot);
+#endif
     return ordinary_netplay_run(launch,boot);
 }
 
@@ -42,7 +49,7 @@ void print_usage() {
         "    --netplay-players 4 --netplay-seat N --netplay-session ID\n"
         "    --netplay-bind IP:PORT [--netplay-peer HOST_IP:PORT]\n"
         "    [--netplay-rollback | --netplay-delay-sync] [--netplay-delay 2..20]\n"
-        "    --netplay-safe: confirmed inputs, delay >=6, wait through network outages\n");
+        "    --netplay-safe: direct TCP, confirmed inputs, automatic room recovery\n");
 }
 
 }  // namespace

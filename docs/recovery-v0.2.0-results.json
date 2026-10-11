@@ -1,0 +1,132 @@
+[
+  {
+    "elapsed": 39.17,
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 1,
+    "proxy_bytes": 0,
+    "executable_sha256": "afd336e0e07af70a70c944774b59e30bbb00caa3a175659749cccba2ef69666a",
+    "state_sha256": {
+      "seat0": "cc54040c4c69f9f179e830a140ae39f5f48d3cec28b2dff9969dc88337b88859",
+      "seat1": "cc54040c4c69f9f179e830a140ae39f5f48d3cec28b2dff9969dc88337b88859",
+      "seat2": "cc54040c4c69f9f179e830a140ae39f5f48d3cec28b2dff9969dc88337b88859"
+    },
+    "passed": true,
+    "scenario": {
+      "native": true,
+      "players": 3,
+      "fault": "host",
+      "frames": 180,
+      "at": 60,
+      "cut_seconds": 12
+    }
+  },
+  {
+    "elapsed": 29.05,
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 0,
+    "executable_sha256": "afd336e0e07af70a70c944774b59e30bbb00caa3a175659749cccba2ef69666a",
+    "state_sha256": {
+      "seat0": "d149650fdf3aefa6155988d33536e5821ac2bccc1b8bf41a8ff2d638f3a4560e",
+      "seat1": "d149650fdf3aefa6155988d33536e5821ac2bccc1b8bf41a8ff2d638f3a4560e",
+      "seat2": "d149650fdf3aefa6155988d33536e5821ac2bccc1b8bf41a8ff2d638f3a4560e"
+    },
+    "passed": true,
+    "scenario": {
+      "native": true,
+      "players": 3,
+      "fault": "desync",
+      "frames": 120,
+      "at": 30,
+      "cut_seconds": 12
+    }
+  },
+  {
+    "elapsed": 12.8,
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 1,
+    "proxy_bytes": 0,
+    "executable_sha256": "afd336e0e07af70a70c944774b59e30bbb00caa3a175659749cccba2ef69666a",
+    "state_sha256": {
+      "seat0": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d",
+      "seat1": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d",
+      "seat2": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d",
+      "seat3": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d"
+    },
+    "passed": true,
+    "scenario": {
+      "native": true,
+      "players": 4,
+      "fault": "guest",
+      "frames": 120,
+      "at": 30,
+      "cut_seconds": 12
+    }
+  },
+  {
+    "elapsed": 11.06,
+    "exit_codes": [
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 0,
+    "executable_sha256": "afd336e0e07af70a70c944774b59e30bbb00caa3a175659749cccba2ef69666a",
+    "state_sha256": {
+      "seat0": "1f5d1d2b2e3001643600141e93a8186cbb216a711b735a6a51d9a822a4981be5",
+      "seat1": "1f5d1d2b2e3001643600141e93a8186cbb216a711b735a6a51d9a822a4981be5"
+    },
+    "passed": true,
+    "scenario": {
+      "native": true,
+      "players": 2,
+      "fault": "watchdog",
+      "frames": 120,
+      "at": 30,
+      "cut_seconds": 12
+    }
+  },
+  {
+    "elapsed": 83.83,
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 10830324,
+    "executable_sha256": "afd336e0e07af70a70c944774b59e30bbb00caa3a175659749cccba2ef69666a",
+    "state_sha256": {
+      "seat0": "d149650fdf3aefa6155988d33536e5821ac2bccc1b8bf41a8ff2d638f3a4560e",
+      "seat1": "d149650fdf3aefa6155988d33536e5821ac2bccc1b8bf41a8ff2d638f3a4560e",
+      "seat2": "d149650fdf3aefa6155988d33536e5821ac2bccc1b8bf41a8ff2d638f3a4560e"
+    },
+    "passed": true,
+    "scenario": {
+      "native": true,
+      "players": 3,
+      "fault": "network",
+      "frames": 120,
+      "at": 30,
+      "cut_seconds": 65.0
+    }
+  }
+]

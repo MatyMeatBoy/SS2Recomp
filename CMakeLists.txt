@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(ShiningSoul2Recomp VERSION 0.1.1 LANGUAGES C CXX)
+project(ShiningSoul2Recomp VERSION 0.2.0 LANGUAGES C CXX)
 
 option(SS2_BUILD_LINK_PROBE "Build the headless scripted multiplayer qualification tool" OFF)
 
@@ -111,6 +111,16 @@ if(SS2_BUILD_LINK_PROBE)
     target_link_options(SS2LinkProbe PRIVATE "-Wl,--stack,16777216")
 endif()
 if(GBARECOMP_NETPLAY)
+    if(WIN32)
+        target_sources(ShiningSoul2Recomp PRIVATE src/ss2_recovery.cpp src/ss2_recovery_runner.cpp)
+        target_link_libraries(ShiningSoul2Recomp PRIVATE ws2_32 bcrypt)
+        if(SS2_BUILD_LINK_PROBE)
+            add_executable(SS2RecoveryProtocolTest re/recovery_protocol_peer.cpp
+                src/ss2_recovery.cpp "${GBARECOMP_ROOT}/src/gba/sha1.cpp")
+            target_include_directories(SS2RecoveryProtocolTest PRIVATE src "${GBARECOMP_ROOT}/src/gba")
+            target_link_libraries(SS2RecoveryProtocolTest PRIVATE ws2_32 bcrypt)
+        endif()
+    endif()
     target_link_libraries(ShiningSoul2Recomp PRIVATE gbarecomp_netplay)
     gbarecomp_target_netplay_identity(ShiningSoul2Recomp
         "${CMAKE_CURRENT_SOURCE_DIR}" "${GBA_GAME_GENERATED_ROOT}")

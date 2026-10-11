@@ -76,3 +76,8 @@ re/ptr_candidates.txt
 
 # Launcher art rendered locally from the user ROM title screen.
 recomp/launcher/boxart.tga
+
+# Private room credentials and automatic recovery archives.
+netplay/
+*.journal
+*.key

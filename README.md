@@ -24,7 +24,7 @@ salas/netplay de recomp-ui.
 | Netplay 2 jugadores | Integrado |
 | Netplay 3–4 jugadores | Integrado; delay-sync recomendado |
 | Rollback 4 jugadores | Experimental, probado con red degradada |
-| Release Windows x64 | [v0.1.1](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.1.1) |
+| Release experimental Windows x64 | [v0.2.0](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.0) |
 
 La prioridad de esta etapa es ampliar las pruebas entre PCs reales, cubrir más
 escenas del juego y validar reconexión durante una partida prolongada.
@@ -38,8 +38,7 @@ BIOS.
 
 ## Instalación rápida en Windows
 
-1. Descarga el paquete de la release y extrae `ShiningSoul2Recomp.exe`,
-   `SDL2.dll`, la carpeta `mods` y los archivos de documentación.
+1. Descarga y extrae todo el ZIP, conservando las carpetas `build` y `tools`.
 2. Ejecuta el programa. El launcher permite seleccionar la ROM y el BIOS.
    También puedes colocarlos localmente según `game.toml`:
    `roms/shining_soul_2_europe.gba` y `gbarecomp/bios/gba_bios.bin`.
@@ -56,6 +55,13 @@ personajes. Los menús, diálogos y escenas sin un mapa de campo reconocido
 conservan composición nativa centrada.
 
 ## Multijugador
+
+El perfil recomendado de esta versión es `Online Host.bat` / `Online Invitado.bat`:
+TCP directo con recuperación automática para 2–4 jugadores. Se verificaron
+cortes de 65 segundos, reinicio del host, del invitado y divergencia transitoria
+en pruebas locales. [Configuración y límites](docs/NETPLAY_RECOVERY.md).
+
+Los ejemplos siguientes describen el transporte UDP anterior, todavía disponible.
 
 Cada proceso simula todas las consolas de la sesión y comparte las entradas,
 snapshots y el estado de sincronización. El asiento 0 actúa como hub directo para tres o
@@ -110,7 +116,8 @@ instalación del dispatcher Flash en cada consola. Las pruebas usan entradas
 neutras y reportaron cero ticks de replay, por lo que aún no validan
 correcciones de rollback durante gameplay. Un corte de red de dos segundos
 impidió completar una prueba de cuatro jugadores dentro de 60 segundos;
-la recuperación sigue pendiente. Véase la matriz enlazada arriba.
+ese resultado corresponde al transporte UDP anterior. El nuevo perfil TCP
+recuperable pasó los escenarios documentados en la matriz enlazada arriba.
 
 Las pruebas posteriores con controles distintos observaron un tick de rollback
 corregido por proceso en loopback. Bajo estrés mayor, rollback rechazó un
@@ -127,12 +134,17 @@ edita `generated/` a mano. Antes de configurar una copia recién clonada,
 ejecuta `powershell -ExecutionPolicy Bypass -File tools/prepare_gbarecomp.ps1`
 para fijar la versión de recomp-net usada por esta release.
 
-### Perfil online conservador
+### Online recuperable (Windows, experimental)
 
-Inicia `Jugar ShiningSoul2Recomp Online Seguro.bat` o añade `--netplay-safe`.
-Usa controles confirmados y espera cortes temporales de una sesión establecida.
-Puede pausar ante latencia; no recupera procesos cerrados ni migra el host.
-[Diseño y límites](docs/NETPLAY_RECOVERY.md).
+`Online Host.bat` y `Online Invitado.bat` conectan por TCP directo con recuperación
+automática de cortes y reentrada de procesos. El host conserva un checkpoint y
+un diario de controles confirmados; el BAT también supervisa crashes de Windows.
+Compatible con 2–4 participantes en LAN o VPN/Hamachi. Puede pausar durante la
+espera; el host original debe volver. El modo UDP/rollback y el relay anterior
+siguen disponibles, con sus límites de validación.
+
+[Inicio, diseño y límites](docs/NETPLAY_RECOVERY.md) ·
+[Pruebas y evidencia](docs/NETPLAY_VALIDATION.md).
 
 Para reconstruir, ejecuta `tools/prepare_gbarecomp.ps1` tras inicializar los
 submódulos: aplica los parches de runtime usados por este proyecto.

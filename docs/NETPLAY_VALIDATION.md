@@ -1,5 +1,49 @@
 # Validación del netplay — 2026-10-11
 
+## v0.2.0: perfil TCP recuperable
+
+Pruebas locales con procesos independientes, vídeo/audio dummy y comparación
+SHA-256 de los estados completos al terminar. Todos salieron con código 0 y
+estados idénticos entre asientos. El binario distribuido probado tiene SHA-256
+`afd336e0e07af70a70c944774b59e30bbb00caa3a175659749cccba2ef69666a`.
+
+| Consolas | Escena | Fallo provocado | Ticks | Duración |
+| --- | --- | --- | --- | --- |
+| 3 | Selección de clases, controles distintos | Terminación y reinicio del host en tick 60 | 180 | 39,17 s |
+| 3 | Selección de clases, controles distintos | Corrupción de EWRAM de un invitado en frame 30 | 120 | 29,05 s |
+| 4 | Arranque | Terminación y reentrada de un invitado en tick 30 | 120 | 12,80 s |
+| 2 | Arranque | Crash NTSTATUS y relanzamiento mediante supervisor PowerShell | 120 | 11,06 s |
+| 3 | Selección de clases, controles distintos | Corte TCP de 65 segundos en tick 30 | 120 | 83,83 s |
+
+El proxy del corte contabilizó 10.830.324 bytes acumulados, incluyendo copias
+completas de estado durante la entrada y recuperación. No es una medición de
+tráfico constante por segundo. Una muestra de procesos durante estas pruebas
+registró aproximadamente 76–81 MiB de RAM por instancia; no es un máximo.
+
+La capa de protocolo también pasó pruebas independientes sin ROM: 2 consolas
+normales, reinicio de host, divergencia, 4 con reinicio de invitado y 3 con corte
+de 65 segundos. Esto verifica transporte/persistencia sin sustituir pruebas GBA.
+
+Reproducción básica, con ROM y BIOS locales propios:
+
+```text
+py -3.12 re/test_recovery.py --native --players 4 --frames 120 --at 30 --fault guest
+py -3.12 re/test_recovery.py --native --players 2 --frames 120 --at 30 --fault watchdog
+py -3.12 re/test_recovery.py --players 3 --frames 180 --at 60 --fault network --cut-seconds 65 --timeout 150
+```
+
+Las pruebas de selección de clases requieren un estado nativo de tres consolas
+aportado localmente mediante `--initial-state`, y `re/party_stress_inputs.txt`
+mediante `--inputs`. No se distribuyen estados derivados del juego. Los resultados
+completos quedan en `re/run/`; el resumen público está en
+`docs/recovery-v0.2.0-results.json`.
+
+**Pendiente:** combate enlazado prolongado, PCs remotos por Hamachi, latencia real
+y rendimiento sostenido. Durante la caída se pausa; no hay migración del host ni
+promesa de rollback imperceptible. Estas pruebas no emiten cobertura FULLY_STATIC.
+
+## Historial del transporte UDP
+
 El netplay es técnicamente viable, pero sigue en fase experimental. Estas
 pruebas arrancan procesos independientes con ROM y BIOS propios, intercambian
 entradas por UDP y comparan los archivos `.paired` completos. Usan vídeo y
