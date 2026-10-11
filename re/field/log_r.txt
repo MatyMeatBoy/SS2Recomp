@@ -1,0 +1,3 @@
+frame 25894 shot ./vr19.bmp link=0,1,2
+frame 26312 shot ./vr39.bmp link=0,1,2
+frame 26736 shot ./vr59.bmp link=0,1,2

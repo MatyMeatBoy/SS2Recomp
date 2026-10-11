@@ -1,0 +1,14 @@
+# gbarecomp-keyinput-v1
+# frame,keyinput_active_low
+# Language: Down (Espanol row), Right, A; title: Start; menu: A (1 player).
+0,0x03FF
+700,0x037F
+704,0x03FF
+760,0x03EF
+764,0x03FF
+820,0x03FE
+824,0x03FF
+1100,0x03F7
+1104,0x03FF
+1250,0x03FE
+1254,0x03FF

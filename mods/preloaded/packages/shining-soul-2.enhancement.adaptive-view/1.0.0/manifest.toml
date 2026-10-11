@@ -1,0 +1,24 @@
+format_version = 1
+id = "shining-soul-2.enhancement.adaptive-view"
+version = "1.0.0"
+name = "Shining Soul II Adaptive Widescreen"
+author = "ShiningSoul2Recomp"
+description = "Expands field scenes with Shining Soul II's own map data and moves the status and slot panels to the screen edges. Menus, dialogs-only screens and cutscenes stay native."
+license = "MIT"
+resolver = "declarative"
+save_compatibility = "shared"
+
+[[target]]
+game_id = "shining-soul-2-eu"
+rom_sha1 = "aa1288be9257337abdfe3034898cf6c7aa778fbc"
+
+[[feature]]
+id = "adaptive-view"
+name = "Adaptive Widescreen"
+description = "Expand supported field scenes from 240x160 (native 3:2) up to 480x160 (3:1), following the live window or fullscreen aspect ratio (16:9 = 284x160)."
+group = "Display"
+default_enabled = true
+
+[[plugin]]
+feature = "adaptive-view"
+id = "shining-soul-2.adaptive-view"

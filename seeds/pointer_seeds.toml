@@ -1,0 +1,2257 @@
+# Code pointers (Thumb, bit 0 set) whose targets open with push {..,lr},
+# harvested from literal pools and event tables by re/ (2026-10-10).
+# Reviewed as a batch: each entry is a pointer + a valid prologue. Overlay
+# on game.toml; the base config wins every conflict.
+
+[identity]
+sha1 = "aa1288be9257337abdfe3034898cf6c7aa778fbc"
+
+[[extra_func]]
+addr = 0x080010DC
+mode = "thumb"
+note = "pointer at 0x080B9988"
+
+[[extra_func]]
+addr = 0x08001280
+mode = "thumb"
+note = "pointer at 0x080B9990"
+
+[[extra_func]]
+addr = 0x080012AC
+mode = "thumb"
+note = "pointer at 0x080B9994"
+
+[[extra_func]]
+addr = 0x0800BEC0
+mode = "thumb"
+note = "pointer at 0x0800D0B8"
+
+[[extra_func]]
+addr = 0x0800D164
+mode = "thumb"
+note = "pointer at 0x0800C14C"
+
+[[extra_func]]
+addr = 0x08021214
+mode = "thumb"
+note = "pointer at 0x08021F54"
+
+[[extra_func]]
+addr = 0x080215E4
+mode = "thumb"
+note = "pointer at 0x08021FDC"
+
+[[extra_func]]
+addr = 0x08026858
+mode = "thumb"
+note = "pointer at 0x08026CC0"
+
+[[extra_func]]
+addr = 0x08027B50
+mode = "thumb"
+note = "pointer at 0x0850F670, 0x085101E8, 0x08511314"
+
+[[extra_func]]
+addr = 0x08028830
+mode = "thumb"
+note = "pointer at 0x08057F14, 0x08057FB8"
+
+[[extra_func]]
+addr = 0x0802A104
+mode = "thumb"
+note = "pointer at 0x08048198, 0x0804AFF4, 0x0804C4B4"
+
+[[extra_func]]
+addr = 0x0802AA28
+mode = "thumb"
+note = "pointer at 0x08089334"
+
+[[extra_func]]
+addr = 0x0802B8A4
+mode = "thumb"
+note = "pointer at 0x08088DC8"
+
+[[extra_func]]
+addr = 0x0802C144
+mode = "thumb"
+note = "pointer at 0x0802C0CC, 0x0802C1FC"
+
+[[extra_func]]
+addr = 0x0802C2A0
+mode = "thumb"
+note = "pointer at 0x08089004"
+
+[[extra_func]]
+addr = 0x0802C674
+mode = "thumb"
+note = "pointer at 0x08089478"
+
+[[extra_func]]
+addr = 0x0802CF84
+mode = "thumb"
+note = "pointer at 0x08089760"
+
+[[extra_func]]
+addr = 0x0802D050
+mode = "thumb"
+note = "pointer at 0x08089884"
+
+[[extra_func]]
+addr = 0x0802D200
+mode = "thumb"
+note = "pointer at 0x080899A8"
+
+[[extra_func]]
+addr = 0x0802D2C8
+mode = "thumb"
+note = "pointer at 0x08089BCC"
+
+[[extra_func]]
+addr = 0x0802D568
+mode = "thumb"
+note = "pointer at 0x08089D84"
+
+[[extra_func]]
+addr = 0x0802D73C
+mode = "thumb"
+note = "pointer at 0x0808A0F8"
+
+[[extra_func]]
+addr = 0x0802D800
+mode = "thumb"
+note = "pointer at 0x0808A5A8"
+
+[[extra_func]]
+addr = 0x0802D8C4
+mode = "thumb"
+note = "pointer at 0x0808A360"
+
+[[extra_func]]
+addr = 0x0802DAF0
+mode = "thumb"
+note = "pointer at 0x0808A810"
+
+[[extra_func]]
+addr = 0x0802DE0C
+mode = "thumb"
+note = "pointer at 0x0808A44C"
+
+[[extra_func]]
+addr = 0x0802E110
+mode = "thumb"
+note = "pointer at 0x0808A8FC"
+
+[[extra_func]]
+addr = 0x0802E444
+mode = "thumb"
+note = "pointer at 0x0808AA50"
+
+[[extra_func]]
+addr = 0x0802E6E0
+mode = "thumb"
+note = "pointer at 0x0808AE64"
+
+[[extra_func]]
+addr = 0x0802E7AC
+mode = "thumb"
+note = "pointer at 0x08089FB8"
+
+[[extra_func]]
+addr = 0x0802EA50
+mode = "thumb"
+note = "pointer at 0x0808F8B0, 0x084B0E88"
+
+[[extra_func]]
+addr = 0x0802F4B0
+mode = "thumb"
+note = "pointer at 0x084B0FB4"
+
+[[extra_func]]
+addr = 0x0802F578
+mode = "thumb"
+note = "pointer at 0x0802AC80, 0x0802AD78"
+
+[[extra_func]]
+addr = 0x0802FA80
+mode = "thumb"
+note = "pointer at 0x0802AD7C"
+
+[[extra_func]]
+addr = 0x0802FEA0
+mode = "thumb"
+note = "pointer at 0x0802AE74, 0x0802B004, 0x08045148"
+
+[[extra_func]]
+addr = 0x08030480
+mode = "thumb"
+note = "pointer at 0x0802B008"
+
+[[extra_func]]
+addr = 0x080308B4
+mode = "thumb"
+note = "pointer at 0x0802AB7C, 0x0802B0F0, 0x08040B50"
+
+[[extra_func]]
+addr = 0x08030B28
+mode = "thumb"
+note = "pointer at 0x0802B00C"
+
+[[extra_func]]
+addr = 0x08030F54
+mode = "thumb"
+note = "pointer at 0x0802D28C"
+
+[[extra_func]]
+addr = 0x0803145C
+mode = "thumb"
+note = "pointer at 0x0802D650"
+
+[[extra_func]]
+addr = 0x08031580
+mode = "thumb"
+note = "pointer at 0x0802D654"
+
+[[extra_func]]
+addr = 0x080316A4
+mode = "thumb"
+note = "pointer at 0x0802D888"
+
+[[extra_func]]
+addr = 0x0803188C
+mode = "thumb"
+note = "pointer at 0x0802C38C"
+
+[[extra_func]]
+addr = 0x080319F0
+mode = "thumb"
+note = "pointer at 0x0802C390"
+
+[[extra_func]]
+addr = 0x08031B54
+mode = "thumb"
+note = "pointer at 0x0802C448, 0x0802C630"
+
+[[extra_func]]
+addr = 0x08031CB8
+mode = "thumb"
+note = "pointer at 0x0802C638"
+
+[[extra_func]]
+addr = 0x08031D88
+mode = "thumb"
+note = "pointer at 0x0802C63C"
+
+[[extra_func]]
+addr = 0x08031E58
+mode = "thumb"
+note = "pointer at 0x0802C640"
+
+[[extra_func]]
+addr = 0x08031F28
+mode = "thumb"
+note = "pointer at 0x0802EB4C"
+
+[[extra_func]]
+addr = 0x08031FF8
+mode = "thumb"
+note = "pointer at 0x0802B92C"
+
+[[extra_func]]
+addr = 0x08032598
+mode = "thumb"
+note = "pointer at 0x0802B930, 0x080328F8"
+
+[[extra_func]]
+addr = 0x0803294C
+mode = "thumb"
+note = "pointer at 0x0802BB4C"
+
+[[extra_func]]
+addr = 0x08032DE4
+mode = "thumb"
+note = "pointer at 0x0802BB60"
+
+[[extra_func]]
+addr = 0x08033198
+mode = "thumb"
+note = "pointer at 0x0802BC20, 0x08045760"
+
+[[extra_func]]
+addr = 0x08033650
+mode = "thumb"
+note = "pointer at 0x0802D708"
+
+[[extra_func]]
+addr = 0x08033B3C
+mode = "thumb"
+note = "pointer at 0x0802BB54"
+
+[[extra_func]]
+addr = 0x08033C40
+mode = "thumb"
+note = "pointer at 0x0802C730, 0x0802C7BC, 0x0802C87C"
+
+[[extra_func]]
+addr = 0x08034488
+mode = "thumb"
+note = "pointer at 0x0802C964"
+
+[[extra_func]]
+addr = 0x08034900
+mode = "thumb"
+note = "pointer at 0x0802C7C0"
+
+[[extra_func]]
+addr = 0x08034A5C
+mode = "thumb"
+note = "pointer at 0x0802CD4C"
+
+[[extra_func]]
+addr = 0x08034F64
+mode = "thumb"
+note = "pointer at 0x0802CDF0, 0x08044E30"
+
+[[extra_func]]
+addr = 0x0803540C
+mode = "thumb"
+note = "pointer at 0x0802CAD0, 0x0802CBA0, 0x0802CC70"
+
+[[extra_func]]
+addr = 0x08035914
+mode = "thumb"
+note = "pointer at 0x0802CAD4"
+
+[[extra_func]]
+addr = 0x080359E8
+mode = "thumb"
+note = "pointer at 0x0802CBA4"
+
+[[extra_func]]
+addr = 0x08035A88
+mode = "thumb"
+note = "pointer at 0x0802CC74"
+
+[[extra_func]]
+addr = 0x08035B18
+mode = "thumb"
+note = "pointer at 0x0802CEC0"
+
+[[extra_func]]
+addr = 0x080368F4
+mode = "thumb"
+note = "pointer at 0x0802CEFC"
+
+[[extra_func]]
+addr = 0x080376CC
+mode = "thumb"
+note = "pointer at 0x0802CAC8, 0x08034558"
+
+[[extra_func]]
+addr = 0x08037B04
+mode = "thumb"
+note = "pointer at 0x0802D014"
+
+[[extra_func]]
+addr = 0x08037DFC
+mode = "thumb"
+note = "pointer at 0x0802D1A4"
+
+[[extra_func]]
+addr = 0x080384D4
+mode = "thumb"
+note = "pointer at 0x0802D1B4"
+
+[[extra_func]]
+addr = 0x0803898C
+mode = "thumb"
+note = "pointer at 0x0802DFF0, 0x08045F40"
+
+[[extra_func]]
+addr = 0x08038D18
+mode = "thumb"
+note = "pointer at 0x0802DE90"
+
+[[extra_func]]
+addr = 0x080392B4
+mode = "thumb"
+note = "pointer at 0x0802E0DC"
+
+[[extra_func]]
+addr = 0x080399E4
+mode = "thumb"
+note = "pointer at 0x0802D7C4"
+
+[[extra_func]]
+addr = 0x08039F00
+mode = "thumb"
+note = "pointer at 0x0802E3B8"
+
+[[extra_func]]
+addr = 0x0803A460
+mode = "thumb"
+note = "pointer at 0x0802D4F8"
+
+[[extra_func]]
+addr = 0x0803A8F0
+mode = "thumb"
+note = "pointer at 0x0802E3C8"
+
+[[extra_func]]
+addr = 0x0803AD74
+mode = "thumb"
+note = "pointer at 0x0802E3D0"
+
+[[extra_func]]
+addr = 0x0803AE6C
+mode = "thumb"
+note = "pointer at 0x0802E3E0"
+
+[[extra_func]]
+addr = 0x0803B194
+mode = "thumb"
+note = "pointer at 0x0802D944"
+
+[[extra_func]]
+addr = 0x0803B69C
+mode = "thumb"
+note = "pointer at 0x0802D948"
+
+[[extra_func]]
+addr = 0x0803B720
+mode = "thumb"
+note = "pointer at 0x0802DA98"
+
+[[extra_func]]
+addr = 0x0803BC3C
+mode = "thumb"
+note = "pointer at 0x0802DA9C"
+
+[[extra_func]]
+addr = 0x0803C008
+mode = "thumb"
+note = "pointer at 0x0802EB48"
+
+[[extra_func]]
+addr = 0x0803C3C8
+mode = "thumb"
+note = "pointer at 0x0802F53C"
+
+[[extra_func]]
+addr = 0x0803C4C0
+mode = "thumb"
+note = "pointer at 0x0803C440"
+
+[[extra_func]]
+addr = 0x0803C698
+mode = "thumb"
+note = "pointer at 0x0802E670"
+
+[[extra_func]]
+addr = 0x0803D99C
+mode = "thumb"
+note = "pointer at 0x08089740"
+
+[[extra_func]]
+addr = 0x0803DE84
+mode = "thumb"
+note = "pointer at 0x084B0EEC"
+
+[[extra_func]]
+addr = 0x0803E510
+mode = "thumb"
+note = "pointer at 0x0803E31C"
+
+[[extra_func]]
+addr = 0x0803E5D8
+mode = "thumb"
+note = "pointer at 0x0803E458, 0x0805305C"
+
+[[extra_func]]
+addr = 0x0803E638
+mode = "thumb"
+note = "pointer at 0x084B0EF0"
+
+[[extra_func]]
+addr = 0x0803EE88
+mode = "thumb"
+note = "pointer at 0x084B0EF4"
+
+[[extra_func]]
+addr = 0x0803F18C
+mode = "thumb"
+note = "pointer at 0x0802BF7C"
+
+[[extra_func]]
+addr = 0x0803F210
+mode = "thumb"
+note = "pointer at 0x0803EB70"
+
+[[extra_func]]
+addr = 0x0803F348
+mode = "thumb"
+note = "pointer at 0x0803EBB0"
+
+[[extra_func]]
+addr = 0x0803F454
+mode = "thumb"
+note = "pointer at 0x0803E72C, 0x0803E748, 0x0803E898"
+
+[[extra_func]]
+addr = 0x080435C4
+mode = "thumb"
+note = "pointer at 0x080434E4"
+
+[[extra_func]]
+addr = 0x08043664
+mode = "thumb"
+note = "pointer at 0x08043470"
+
+[[extra_func]]
+addr = 0x08043850
+mode = "thumb"
+note = "pointer at 0x0804377C"
+
+[[extra_func]]
+addr = 0x08043A4C
+mode = "thumb"
+note = "pointer at 0x08042E6C"
+
+[[extra_func]]
+addr = 0x08043B20
+mode = "thumb"
+note = "pointer at 0x08042E70"
+
+[[extra_func]]
+addr = 0x08043BF4
+mode = "thumb"
+note = "pointer at 0x08042E74"
+
+[[extra_func]]
+addr = 0x08043CC8
+mode = "thumb"
+note = "pointer at 0x08042E78"
+
+[[extra_func]]
+addr = 0x08043D9C
+mode = "thumb"
+note = "pointer at 0x08043324"
+
+[[extra_func]]
+addr = 0x08043E70
+mode = "thumb"
+note = "pointer at 0x08043328"
+
+[[extra_func]]
+addr = 0x08043F44
+mode = "thumb"
+note = "pointer at 0x08043344"
+
+[[extra_func]]
+addr = 0x08044018
+mode = "thumb"
+note = "pointer at 0x08043334"
+
+[[extra_func]]
+addr = 0x080440EC
+mode = "thumb"
+note = "pointer at 0x0804333C"
+
+[[extra_func]]
+addr = 0x080441C0
+mode = "thumb"
+note = "pointer at 0x0804346C"
+
+[[extra_func]]
+addr = 0x08044318
+mode = "thumb"
+note = "pointer at 0x0804332C"
+
+[[extra_func]]
+addr = 0x080443EC
+mode = "thumb"
+note = "pointer at 0x08042E7C"
+
+[[extra_func]]
+addr = 0x080444C0
+mode = "thumb"
+note = "pointer at 0x0808AF30"
+
+[[extra_func]]
+addr = 0x08044D1C
+mode = "thumb"
+note = "pointer at 0x0802CE04"
+
+[[extra_func]]
+addr = 0x08044E34
+mode = "thumb"
+note = "pointer at 0x0802DECC"
+
+[[extra_func]]
+addr = 0x08044EB4
+mode = "thumb"
+note = "pointer at 0x0802B810"
+
+[[extra_func]]
+addr = 0x0804534C
+mode = "thumb"
+note = "pointer at 0x0802BDA4, 0x080454D0, 0x08045554"
+
+[[extra_func]]
+addr = 0x080455F0
+mode = "thumb"
+note = "pointer at 0x0802D2E8"
+
+[[extra_func]]
+addr = 0x08045660
+mode = "thumb"
+note = "pointer at 0x0802BC30"
+
+[[extra_func]]
+addr = 0x08045764
+mode = "thumb"
+note = "pointer at 0x080335B4, 0x08033648"
+
+[[extra_func]]
+addr = 0x08045B68
+mode = "thumb"
+note = "pointer at 0x0802B154"
+
+[[extra_func]]
+addr = 0x08045E38
+mode = "thumb"
+note = "pointer at 0x0802E008"
+
+[[extra_func]]
+addr = 0x08045F44
+mode = "thumb"
+note = "pointer at 0x0802E674"
+
+[[extra_func]]
+addr = 0x08046490
+mode = "thumb"
+note = "pointer at 0x0802E67C"
+
+[[extra_func]]
+addr = 0x080469DC
+mode = "thumb"
+note = "pointer at 0x0802E684"
+
+[[extra_func]]
+addr = 0x08046F28
+mode = "thumb"
+note = "pointer at 0x0802E678"
+
+[[extra_func]]
+addr = 0x0804778C
+mode = "thumb"
+note = "pointer at 0x084B0AA0"
+
+[[extra_func]]
+addr = 0x08047970
+mode = "thumb"
+note = "pointer at 0x08047884"
+
+[[extra_func]]
+addr = 0x08047B2C
+mode = "thumb"
+note = "pointer at 0x08047980, 0x08047A28, 0x08047A84"
+
+[[extra_func]]
+addr = 0x080480E8
+mode = "thumb"
+note = "pointer at 0x084B0AA8"
+
+[[extra_func]]
+addr = 0x0804819C
+mode = "thumb"
+note = "pointer at 0x084B0AB0"
+
+[[extra_func]]
+addr = 0x08048570
+mode = "thumb"
+note = "pointer at 0x08048364, 0x080483C0, 0x080484B0"
+
+[[extra_func]]
+addr = 0x08048A74
+mode = "thumb"
+note = "pointer at 0x08048590, 0x08048650, 0x080486A8"
+
+[[extra_func]]
+addr = 0x08049DC4
+mode = "thumb"
+note = "pointer at 0x084B0AB4"
+
+[[extra_func]]
+addr = 0x08049EBC
+mode = "thumb"
+note = "pointer at 0x084B0ABC"
+
+[[extra_func]]
+addr = 0x0804A188
+mode = "thumb"
+note = "pointer at 0x084B0B14"
+
+[[extra_func]]
+addr = 0x0804A478
+mode = "thumb"
+note = "pointer at 0x0804A244"
+
+[[extra_func]]
+addr = 0x0804A89C
+mode = "thumb"
+note = "pointer at 0x0804A36C, 0x0804A3C8, 0x0804A500"
+
+[[extra_func]]
+addr = 0x0804AE48
+mode = "thumb"
+note = "pointer at 0x084B0B18"
+
+[[extra_func]]
+addr = 0x0804AF80
+mode = "thumb"
+note = "pointer at 0x084B0B1C"
+
+[[extra_func]]
+addr = 0x0804B054
+mode = "thumb"
+note = "pointer at 0x0804AFA0, 0x0804B06C"
+
+[[extra_func]]
+addr = 0x0804B100
+mode = "thumb"
+note = "pointer at 0x084B0B20"
+
+[[extra_func]]
+addr = 0x0804B32C
+mode = "thumb"
+note = "pointer at 0x0804B1B4"
+
+[[extra_func]]
+addr = 0x0804B61C
+mode = "thumb"
+note = "pointer at 0x084B0B28"
+
+[[extra_func]]
+addr = 0x0804B984
+mode = "thumb"
+note = "pointer at 0x084B0B78"
+
+[[extra_func]]
+addr = 0x0804BC38
+mode = "thumb"
+note = "pointer at 0x0805A0E8"
+
+[[extra_func]]
+addr = 0x0804BEF8
+mode = "thumb"
+note = "pointer at 0x0804BA20, 0x0804BE7C, 0x0804BFEC"
+
+[[extra_func]]
+addr = 0x0804C150
+mode = "thumb"
+note = "pointer at 0x0804BFD8"
+
+[[extra_func]]
+addr = 0x0804C408
+mode = "thumb"
+note = "pointer at 0x084B0B90"
+
+[[extra_func]]
+addr = 0x0804C4E8
+mode = "thumb"
+note = "pointer at 0x0804C448, 0x0804C500"
+
+[[extra_func]]
+addr = 0x0804C5A8
+mode = "thumb"
+note = "pointer at 0x084B0B98"
+
+[[extra_func]]
+addr = 0x0804C67C
+mode = "thumb"
+note = "pointer at 0x084B0BA0"
+
+[[extra_func]]
+addr = 0x0804C948
+mode = "thumb"
+note = "pointer at 0x084B0BE0"
+
+[[extra_func]]
+addr = 0x0804CBBC
+mode = "thumb"
+note = "pointer at 0x084B0BE4"
+
+[[extra_func]]
+addr = 0x0804D020
+mode = "thumb"
+note = "pointer at 0x0804CCC4"
+
+[[extra_func]]
+addr = 0x0804D330
+mode = "thumb"
+note = "pointer at 0x0804CD9C, 0x0804CDF8, 0x0804CE54"
+
+[[extra_func]]
+addr = 0x0804DA44
+mode = "thumb"
+note = "pointer at 0x084B0BEC"
+
+[[extra_func]]
+addr = 0x0804DB48
+mode = "thumb"
+note = "pointer at 0x084B0BF4"
+
+[[extra_func]]
+addr = 0x0804DDBC
+mode = "thumb"
+note = "pointer at 0x084B0BFC"
+
+[[extra_func]]
+addr = 0x0804E360
+mode = "thumb"
+note = "pointer at 0x084B0C30"
+
+[[extra_func]]
+addr = 0x0804E628
+mode = "thumb"
+note = "pointer at 0x0804E4C4, 0x0804E5D0"
+
+[[extra_func]]
+addr = 0x0804E7B8
+mode = "thumb"
+note = "pointer at 0x0804E45C, 0x0804E568, 0x0804E7D4"
+
+[[extra_func]]
+addr = 0x0804EABC
+mode = "thumb"
+note = "pointer at 0x084B0C58"
+
+[[extra_func]]
+addr = 0x0804ED18
+mode = "thumb"
+note = "pointer at 0x0804EBDC"
+
+[[extra_func]]
+addr = 0x0804EE20
+mode = "thumb"
+note = "pointer at 0x0804ED74"
+
+[[extra_func]]
+addr = 0x0804EEA8
+mode = "thumb"
+note = "pointer at 0x084B0C60"
+
+[[extra_func]]
+addr = 0x0804F128
+mode = "thumb"
+note = "pointer at 0x084B0C64"
+
+[[extra_func]]
+addr = 0x0804F390
+mode = "thumb"
+note = "pointer at 0x0804F224"
+
+[[extra_func]]
+addr = 0x0804F998
+mode = "thumb"
+note = "pointer at 0x084B0CB4"
+
+[[extra_func]]
+addr = 0x0804FA68
+mode = "thumb"
+note = "pointer at 0x0804F9B8, 0x0804FA80"
+
+[[extra_func]]
+addr = 0x0804FB0C
+mode = "thumb"
+note = "pointer at 0x084B0CA8"
+
+[[extra_func]]
+addr = 0x0804FC3C
+mode = "thumb"
+note = "pointer at 0x084B0CD4"
+
+[[extra_func]]
+addr = 0x0804FF04
+mode = "thumb"
+note = "pointer at 0x084B0D08"
+
+[[extra_func]]
+addr = 0x08050454
+mode = "thumb"
+note = "pointer at 0x084B0D10"
+
+[[extra_func]]
+addr = 0x08050524
+mode = "thumb"
+note = "pointer at 0x08050474, 0x0805053C"
+
+[[extra_func]]
+addr = 0x08050688
+mode = "thumb"
+note = "pointer at 0x084B0D28"
+
+[[extra_func]]
+addr = 0x080509A8
+mode = "thumb"
+note = "pointer at 0x084B0D5C"
+
+[[extra_func]]
+addr = 0x08050E48
+mode = "thumb"
+note = "pointer at 0x08050B6C, 0x08050CDC, 0x08051594"
+
+[[extra_func]]
+addr = 0x08051A78
+mode = "thumb"
+note = "pointer at 0x08050A04"
+
+[[extra_func]]
+addr = 0x08051BFC
+mode = "thumb"
+note = "pointer at 0x084B0D74"
+
+[[extra_func]]
+addr = 0x08051CE4
+mode = "thumb"
+note = "pointer at 0x084B0D88"
+
+[[extra_func]]
+addr = 0x08051DF0
+mode = "thumb"
+note = "pointer at 0x08051D04, 0x08051E08"
+
+[[extra_func]]
+addr = 0x08051E98
+mode = "thumb"
+note = "pointer at 0x084B0D90"
+
+[[extra_func]]
+addr = 0x08052060
+mode = "thumb"
+note = "pointer at 0x084B0D98"
+
+[[extra_func]]
+addr = 0x080523D8
+mode = "thumb"
+note = "pointer at 0x08052338, 0x080523F0"
+
+[[extra_func]]
+addr = 0x0805247C
+mode = "thumb"
+note = "pointer at 0x084B0D9C"
+
+[[extra_func]]
+addr = 0x080526B4
+mode = "thumb"
+note = "pointer at 0x084B0DD0"
+
+[[extra_func]]
+addr = 0x080529E0
+mode = "thumb"
+note = "pointer at 0x084B0DF0"
+
+[[extra_func]]
+addr = 0x08052D0C
+mode = "thumb"
+note = "pointer at 0x084B0E00"
+
+[[extra_func]]
+addr = 0x08053060
+mode = "thumb"
+note = "pointer at 0x084B0E44"
+
+[[extra_func]]
+addr = 0x08053120
+mode = "thumb"
+note = "pointer at 0x08053080, 0x08053138"
+
+[[extra_func]]
+addr = 0x080531C4
+mode = "thumb"
+note = "pointer at 0x084B0E5C"
+
+[[extra_func]]
+addr = 0x08053510
+mode = "thumb"
+note = "pointer at 0x084B0E74"
+
+[[extra_func]]
+addr = 0x080537DC
+mode = "thumb"
+note = "pointer at 0x084B0F50"
+
+[[extra_func]]
+addr = 0x08053A80
+mode = "thumb"
+note = "pointer at 0x084B10F8"
+
+[[extra_func]]
+addr = 0x08053B24
+mode = "thumb"
+note = "pointer at 0x084B1144"
+
+[[extra_func]]
+addr = 0x08053C5C
+mode = "thumb"
+note = "pointer at 0x08053BBC"
+
+[[extra_func]]
+addr = 0x08053CF4
+mode = "thumb"
+note = "pointer at 0x084B1024, 0x084B1088"
+
+[[extra_func]]
+addr = 0x08053D98
+mode = "thumb"
+note = "pointer at 0x084B1158"
+
+[[extra_func]]
+addr = 0x08053E3C
+mode = "thumb"
+note = "pointer at 0x084B11B0"
+
+[[extra_func]]
+addr = 0x080542C4
+mode = "thumb"
+note = "pointer at 0x080540FC, 0x08054258"
+
+[[extra_func]]
+addr = 0x0805442C
+mode = "thumb"
+note = "pointer at 0x08053F9C, 0x08054108, 0x08054264"
+
+[[extra_func]]
+addr = 0x08054514
+mode = "thumb"
+note = "pointer at 0x08054468"
+
+[[extra_func]]
+addr = 0x080545A0
+mode = "thumb"
+note = "pointer at 0x084B11B8"
+
+[[extra_func]]
+addr = 0x08054644
+mode = "thumb"
+note = "pointer at 0x084B120C"
+
+[[extra_func]]
+addr = 0x08054748
+mode = "thumb"
+note = "pointer at 0x084B1210"
+
+[[extra_func]]
+addr = 0x08054904
+mode = "thumb"
+note = "pointer at 0x084B1214"
+
+[[extra_func]]
+addr = 0x08054CE8
+mode = "thumb"
+note = "pointer at 0x084B1218"
+
+[[extra_func]]
+addr = 0x08054FB8
+mode = "thumb"
+note = "pointer at 0x084B121C"
+
+[[extra_func]]
+addr = 0x08055174
+mode = "thumb"
+note = "pointer at 0x084B1224"
+
+[[extra_func]]
+addr = 0x08055558
+mode = "thumb"
+note = "pointer at 0x084B1228"
+
+[[extra_func]]
+addr = 0x080557CC
+mode = "thumb"
+note = "pointer at 0x084B122C"
+
+[[extra_func]]
+addr = 0x080558D0
+mode = "thumb"
+note = "pointer at 0x084B1230"
+
+[[extra_func]]
+addr = 0x08055974
+mode = "thumb"
+note = "pointer at 0x084B1278"
+
+[[extra_func]]
+addr = 0x08055A60
+mode = "thumb"
+note = "pointer at 0x08055984"
+
+[[extra_func]]
+addr = 0x08055BA4
+mode = "thumb"
+note = "pointer at 0x08055A78"
+
+[[extra_func]]
+addr = 0x08055C58
+mode = "thumb"
+note = "pointer at 0x084B1280"
+
+[[extra_func]]
+addr = 0x08055D1C
+mode = "thumb"
+note = "pointer at 0x08055CE0"
+
+[[extra_func]]
+addr = 0x08055E74
+mode = "thumb"
+note = "pointer at 0x084B12E0"
+
+[[extra_func]]
+addr = 0x080560D0
+mode = "thumb"
+note = "pointer at 0x08055EB8, 0x08055F14, 0x08055F70"
+
+[[extra_func]]
+addr = 0x080563F0
+mode = "thumb"
+note = "pointer at 0x084B12E8"
+
+[[extra_func]]
+addr = 0x08056494
+mode = "thumb"
+note = "pointer at 0x084B1348"
+
+[[extra_func]]
+addr = 0x08056538
+mode = "thumb"
+note = "pointer at 0x0802BC88, 0x080565F4"
+
+[[extra_func]]
+addr = 0x0805664C
+mode = "thumb"
+note = "pointer at 0x0804C99C, 0x0804C9F8, 0x0804CA54"
+
+[[extra_func]]
+addr = 0x080567D4
+mode = "thumb"
+note = "pointer at 0x0804AE58, 0x0804AEB4, 0x080524C0"
+
+[[extra_func]]
+addr = 0x08056CB4
+mode = "thumb"
+note = "pointer at 0x08056AA0"
+
+[[extra_func]]
+addr = 0x08058EF8
+mode = "thumb"
+note = "pointer at 0x0802E9E0"
+
+[[extra_func]]
+addr = 0x08058F4C
+mode = "thumb"
+note = "pointer at 0x08041650, 0x08045BD4"
+
+[[extra_func]]
+addr = 0x08059168
+mode = "thumb"
+note = "pointer at 0x0802BB5C"
+
+[[extra_func]]
+addr = 0x0805921C
+mode = "thumb"
+note = "pointer at 0x080365EC, 0x080373C4"
+
+[[extra_func]]
+addr = 0x08059250
+mode = "thumb"
+note = "pointer at 0x08037DEC, 0x0803DA50"
+
+[[extra_func]]
+addr = 0x080592FC
+mode = "thumb"
+note = "pointer at 0x0802D1AC"
+
+[[extra_func]]
+addr = 0x08059340
+mode = "thumb"
+note = "pointer at 0x0803A164"
+
+[[extra_func]]
+addr = 0x08059374
+mode = "thumb"
+note = "pointer at 0x0802E3D8"
+
+[[extra_func]]
+addr = 0x08059418
+mode = "thumb"
+note = "pointer at 0x0802E3C4"
+
+[[extra_func]]
+addr = 0x08059488
+mode = "thumb"
+note = "pointer at 0x0802DD84"
+
+[[extra_func]]
+addr = 0x08059534
+mode = "thumb"
+note = "pointer at 0x0802DD8C"
+
+[[extra_func]]
+addr = 0x080595E0
+mode = "thumb"
+note = "pointer at 0x0802DD94"
+
+[[extra_func]]
+addr = 0x0805968C
+mode = "thumb"
+note = "pointer at 0x0802DD98"
+
+[[extra_func]]
+addr = 0x08059738
+mode = "thumb"
+note = "pointer at 0x0802DDA0"
+
+[[extra_func]]
+addr = 0x080597E4
+mode = "thumb"
+note = "pointer at 0x0802DDA8"
+
+[[extra_func]]
+addr = 0x0805990C
+mode = "thumb"
+note = "pointer at 0x0802BE2C, 0x0802F870, 0x08030358"
+
+[[extra_func]]
+addr = 0x08059968
+mode = "thumb"
+note = "pointer at 0x08045414, 0x08045CE0"
+
+[[extra_func]]
+addr = 0x08059A40
+mode = "thumb"
+note = "pointer at 0x08044FF0, 0x080451B4, 0x08045C80"
+
+[[extra_func]]
+addr = 0x08059A94
+mode = "thumb"
+note = "pointer at 0x08045CE4"
+
+[[extra_func]]
+addr = 0x08059AD0
+mode = "thumb"
+note = "pointer at 0x0802D504"
+
+[[extra_func]]
+addr = 0x08059B84
+mode = "thumb"
+note = "pointer at 0x0802E9EC"
+
+[[extra_func]]
+addr = 0x08059C38
+mode = "thumb"
+note = "pointer at 0x0802E9E4"
+
+[[extra_func]]
+addr = 0x08059CEC
+mode = "thumb"
+note = "pointer at 0x0802D508"
+
+[[extra_func]]
+addr = 0x08059DA0
+mode = "thumb"
+note = "pointer at 0x0802D514"
+
+[[extra_func]]
+addr = 0x08059E54
+mode = "thumb"
+note = "pointer at 0x0802E9F0"
+
+[[extra_func]]
+addr = 0x08059F08
+mode = "thumb"
+note = "pointer at 0x0802E9F4"
+
+[[extra_func]]
+addr = 0x08059FBC
+mode = "thumb"
+note = "pointer at 0x0808AB3C, 0x0808ACD4, 0x084B0AA4"
+
+[[extra_func]]
+addr = 0x0805A004
+mode = "thumb"
+note = "pointer at 0x0804825C, 0x08048314"
+
+[[extra_func]]
+addr = 0x0805A040
+mode = "thumb"
+note = "pointer at 0x08049E88"
+
+[[extra_func]]
+addr = 0x0805A054
+mode = "thumb"
+note = "pointer at 0x0804B3A8, 0x0804B4C8"
+
+[[extra_func]]
+addr = 0x0805A088
+mode = "thumb"
+note = "pointer at 0x0804BB9C"
+
+[[extra_func]]
+addr = 0x0805A0EC
+mode = "thumb"
+note = "pointer at 0x0804C228"
+
+[[extra_func]]
+addr = 0x0805A138
+mode = "thumb"
+note = "pointer at 0x0804C5C8, 0x0805A150"
+
+[[extra_func]]
+addr = 0x0805A194
+mode = "thumb"
+note = "pointer at 0x0804DE70"
+
+[[extra_func]]
+addr = 0x0805A1B4
+mode = "thumb"
+note = "pointer at 0x0804EBF0"
+
+[[extra_func]]
+addr = 0x0805A258
+mode = "thumb"
+note = "pointer at 0x084B0D64"
+
+[[extra_func]]
+addr = 0x0805A2E4
+mode = "thumb"
+note = "pointer at 0x08052614"
+
+[[extra_func]]
+addr = 0x0805A350
+mode = "thumb"
+note = "pointer at 0x08055B40"
+
+[[extra_func]]
+addr = 0x0805A384
+mode = "thumb"
+note = "pointer at 0x08055AD8"
+
+[[extra_func]]
+addr = 0x0805A3B0
+mode = "thumb"
+note = "pointer at 0x0805A3AC"
+
+[[extra_func]]
+addr = 0x0805A3F0
+mode = "thumb"
+note = "pointer at 0x0804813C"
+
+[[extra_func]]
+addr = 0x0805A404
+mode = "thumb"
+note = "pointer at 0x0805A400"
+
+[[extra_func]]
+addr = 0x0805A43C
+mode = "thumb"
+note = "pointer at 0x08056C18, 0x08056D0C"
+
+[[extra_func]]
+addr = 0x0805A474
+mode = "thumb"
+note = "pointer at 0x08051B78, 0x08056C4C"
+
+[[extra_func]]
+addr = 0x0805A6B8
+mode = "thumb"
+note = "pointer at 0x08056F74"
+
+[[extra_func]]
+addr = 0x0805AAB8
+mode = "thumb"
+note = "pointer at 0x08058C20"
+
+[[extra_func]]
+addr = 0x0805CB8C
+mode = "thumb"
+note = "pointer at 0x0808FEB4"
+
+[[extra_func]]
+addr = 0x0806335C
+mode = "thumb"
+note = "pointer at 0x08065B54"
+
+[[extra_func]]
+addr = 0x080634D8
+mode = "thumb"
+note = "pointer at 0x080657C0"
+
+[[extra_func]]
+addr = 0x08069AEC
+mode = "thumb"
+note = "pointer at 0x08069C40"
+
+[[extra_func]]
+addr = 0x08073CF4
+mode = "thumb"
+note = "pointer at 0x08073EE0"
+
+[[extra_func]]
+addr = 0x08082BB0
+mode = "thumb"
+note = "pointer at 0x08085010"
+
+[[extra_func]]
+addr = 0x0808381C
+mode = "thumb"
+note = "pointer at 0x08085438"
+
+[[extra_func]]
+addr = 0x08083AE8
+mode = "thumb"
+note = "pointer at 0x08085414"
+
+[[extra_func]]
+addr = 0x08085518
+mode = "thumb"
+note = "pointer at 0x0808500C"
+
+[[extra_func]]
+addr = 0x080855D4
+mode = "thumb"
+note = "pointer at 0x0808685C"
+
+[[extra_func]]
+addr = 0x080867E0
+mode = "thumb"
+note = "pointer at 0x08086858"
+
+[[extra_func]]
+addr = 0x08087788
+mode = "thumb"
+note = "pointer at 0x08088998"
+
+[[extra_func]]
+addr = 0x08087CC0
+mode = "thumb"
+note = "pointer at 0x080889D0"
+
+[[extra_func]]
+addr = 0x080887D4
+mode = "thumb"
+note = "pointer at 0x08088B1C"
+
+[[extra_func]]
+addr = 0x08088C24
+mode = "thumb"
+note = "pointer at 0x084EDD44, 0x084EDD68, 0x084EDD8C"
+
+[[extra_func]]
+addr = 0x08088F30
+mode = "thumb"
+note = "pointer at 0x084EDF8C, 0x084EDFB0, 0x084EDFD4"
+
+[[extra_func]]
+addr = 0x08089204
+mode = "thumb"
+note = "pointer at 0x084EE1D4, 0x084EE1F8, 0x084EE21C"
+
+[[extra_func]]
+addr = 0x08089384
+mode = "thumb"
+note = "pointer at 0x084EE41C, 0x084EE440, 0x084EE464"
+
+[[extra_func]]
+addr = 0x08089500
+mode = "thumb"
+note = "pointer at 0x084EE664, 0x084EE688, 0x084EE6AC"
+
+[[extra_func]]
+addr = 0x08089784
+mode = "thumb"
+note = "pointer at 0x084EE8AC"
+
+[[extra_func]]
+addr = 0x080898D4
+mode = "thumb"
+note = "pointer at 0x084EEAF4, 0x084EEB18, 0x084EEB3C"
+
+[[extra_func]]
+addr = 0x08089AE4
+mode = "thumb"
+note = "pointer at 0x084EED3C, 0x084EED60"
+
+[[extra_func]]
+addr = 0x08089CA0
+mode = "thumb"
+note = "pointer at 0x084EEF84, 0x084EEFA8, 0x084EEFCC"
+
+[[extra_func]]
+addr = 0x08089EC4
+mode = "thumb"
+note = "pointer at 0x084EF1CC, 0x084EF1F0"
+
+[[extra_func]]
+addr = 0x0808A008
+mode = "thumb"
+note = "pointer at 0x084EF414, 0x084EF438, 0x084EF45C"
+
+[[extra_func]]
+addr = 0x0808A294
+mode = "thumb"
+note = "pointer at 0x084EF65C"
+
+[[extra_func]]
+addr = 0x0808A380
+mode = "thumb"
+note = "pointer at 0x084EF8A4, 0x084EF8C8"
+
+[[extra_func]]
+addr = 0x0808A4D4
+mode = "thumb"
+note = "pointer at 0x084EFAEC, 0x084EFB10, 0x084EFB34"
+
+[[extra_func]]
+addr = 0x0808A744
+mode = "thumb"
+note = "pointer at 0x084EFD34"
+
+[[extra_func]]
+addr = 0x0808A830
+mode = "thumb"
+note = "pointer at 0x084EFF7C, 0x084EFFA0"
+
+[[extra_func]]
+addr = 0x0808A984
+mode = "thumb"
+note = "pointer at 0x084F01C4, 0x084F01E8"
+
+[[extra_func]]
+addr = 0x0808AA70
+mode = "thumb"
+note = "pointer at 0x084F040C, 0x084F0430, 0x084F0454"
+
+[[extra_func]]
+addr = 0x0808AC08
+mode = "thumb"
+note = "pointer at 0x084F0654, 0x084F0678, 0x084F069C"
+
+[[extra_func]]
+addr = 0x0808AD90
+mode = "thumb"
+note = "pointer at 0x084F089C, 0x084F08C0, 0x084F08E4"
+
+[[extra_func]]
+addr = 0x0808AFE8
+mode = "thumb"
+note = "pointer at 0x0808D0A8"
+
+[[extra_func]]
+addr = 0x0808C020
+mode = "thumb"
+note = "pointer at 0x0808C068, 0x0808D114"
+
+[[extra_func]]
+addr = 0x0808C0C4
+mode = "thumb"
+note = "pointer at 0x0808D090"
+
+[[extra_func]]
+addr = 0x0808D0B0
+mode = "thumb"
+note = "pointer at 0x0808F8B4"
+
+[[extra_func]]
+addr = 0x0808D11C
+mode = "thumb"
+note = "pointer at 0x084F0CCC"
+
+[[extra_func]]
+addr = 0x0808D190
+mode = "thumb"
+note = "pointer at 0x084F0F14, 0x084F1280, 0x084F15EC"
+
+[[extra_func]]
+addr = 0x0808D204
+mode = "thumb"
+note = "pointer at 0x084F1958"
+
+[[extra_func]]
+addr = 0x0808D278
+mode = "thumb"
+note = "pointer at 0x084F239C"
+
+[[extra_func]]
+addr = 0x0808D31C
+mode = "thumb"
+note = "pointer at 0x084F2728"
+
+[[extra_func]]
+addr = 0x0808D390
+mode = "thumb"
+note = "pointer at 0x084F2A94, 0x084F2E00, 0x084F316C"
+
+[[extra_func]]
+addr = 0x0808D404
+mode = "thumb"
+note = "pointer at 0x084F44D0"
+
+[[extra_func]]
+addr = 0x0808D4AC
+mode = "thumb"
+note = "pointer at 0x084F4864"
+
+[[extra_func]]
+addr = 0x0808D520
+mode = "thumb"
+note = "pointer at 0x084F4AAC, 0x084F4E18, 0x084F5184"
+
+[[extra_func]]
+addr = 0x0808D594
+mode = "thumb"
+note = "pointer at 0x084F7604"
+
+[[extra_func]]
+addr = 0x0808D654
+mode = "thumb"
+note = "pointer at 0x0808D650"
+
+[[extra_func]]
+addr = 0x0808DA20
+mode = "thumb"
+note = "pointer at 0x084F79AC, 0x084F79D0, 0x084F7D18"
+
+[[extra_func]]
+addr = 0x0808DA94
+mode = "thumb"
+note = "pointer at 0x084F9F50"
+
+[[extra_func]]
+addr = 0x0808DB38
+mode = "thumb"
+note = "pointer at 0x0808DF3C, 0x0808DFE0, 0x0808DFFC"
+
+[[extra_func]]
+addr = 0x0808DE08
+mode = "thumb"
+note = "pointer at 0x084FA2F0"
+
+[[extra_func]]
+addr = 0x0808DE94
+mode = "thumb"
+note = "pointer at 0x084FA65C, 0x084FA8A4, 0x084FAC10"
+
+[[extra_func]]
+addr = 0x0808DF14
+mode = "thumb"
+note = "pointer at 0x084FB2E8"
+
+[[extra_func]]
+addr = 0x0808E000
+mode = "thumb"
+note = "pointer at 0x084FCADC"
+
+[[extra_func]]
+addr = 0x0808E090
+mode = "thumb"
+note = "pointer at 0x084FCD24"
+
+[[extra_func]]
+addr = 0x0808E130
+mode = "thumb"
+note = "pointer at 0x0808DE34, 0x0808DEB8, 0x08090364"
+
+[[extra_func]]
+addr = 0x0808E1F8
+mode = "thumb"
+note = "pointer at 0x084FD0C8, 0x084FD310, 0x084FD558"
+
+[[extra_func]]
+addr = 0x0808E26C
+mode = "thumb"
+note = "pointer at 0x084FDD54, 0x084FDD78"
+
+[[extra_func]]
+addr = 0x0808E2FC
+mode = "thumb"
+note = "pointer at 0x084FFD44"
+
+[[extra_func]]
+addr = 0x0808E414
+mode = "thumb"
+note = "pointer at 0x085000F4, 0x0850033C, 0x085006A8"
+
+[[extra_func]]
+addr = 0x0808E488
+mode = "thumb"
+note = "pointer at 0x08502574"
+
+[[extra_func]]
+addr = 0x0808E530
+mode = "thumb"
+note = "pointer at 0x0808E9B4"
+
+[[extra_func]]
+addr = 0x0808E66C
+mode = "thumb"
+note = "pointer at 0x08502914, 0x08502C80, 0x08502FEC"
+
+[[extra_func]]
+addr = 0x0808E774
+mode = "thumb"
+note = "pointer at 0x08505B44"
+
+[[extra_func]]
+addr = 0x0808E7FC
+mode = "thumb"
+note = "pointer at 0x08504FDC"
+
+[[extra_func]]
+addr = 0x0808E88C
+mode = "thumb"
+note = "pointer at 0x08505D8C"
+
+[[extra_func]]
+addr = 0x0808E94C
+mode = "thumb"
+note = "pointer at 0x0808E710"
+
+[[extra_func]]
+addr = 0x0808E970
+mode = "thumb"
+note = "pointer at 0x0808E70C"
+
+[[extra_func]]
+addr = 0x0808E9FC
+mode = "thumb"
+note = "pointer at 0x08506144, 0x0850638C, 0x085065D4"
+
+[[extra_func]]
+addr = 0x0808EAD8
+mode = "thumb"
+note = "pointer at 0x08506A64"
+
+[[extra_func]]
+addr = 0x0808EB68
+mode = "thumb"
+note = "pointer at 0x08507DC8"
+
+[[extra_func]]
+addr = 0x0808EBF4
+mode = "thumb"
+note = "pointer at 0x0850880C"
+
+[[extra_func]]
+addr = 0x0808ECA0
+mode = "thumb"
+note = "pointer at 0x0808EA6C"
+
+[[extra_func]]
+addr = 0x0808ECD0
+mode = "thumb"
+note = "pointer at 0x0808EA7C, 0x0808EC94"
+
+[[extra_func]]
+addr = 0x0808ECFC
+mode = "thumb"
+note = "pointer at 0x0808EE3C"
+
+[[extra_func]]
+addr = 0x0808EDF0
+mode = "thumb"
+note = "pointer at 0x08508BBC, 0x08508E04, 0x0850904C"
+
+[[extra_func]]
+addr = 0x0808EE98
+mode = "thumb"
+note = "pointer at 0x0850B5F0"
+
+[[extra_func]]
+addr = 0x0808EF54
+mode = "thumb"
+note = "pointer at 0x0850C3A0"
+
+[[extra_func]]
+addr = 0x0808F088
+mode = "thumb"
+note = "pointer at 0x0850BF10"
+
+[[extra_func]]
+addr = 0x0808F15C
+mode = "thumb"
+note = "pointer at 0x0850BCC8"
+
+[[extra_func]]
+addr = 0x0808F1E4
+mode = "thumb"
+note = "pointer at 0x0808F188"
+
+[[extra_func]]
+addr = 0x0808F700
+mode = "thumb"
+note = "pointer at 0x0850C760"
+
+[[extra_func]]
+addr = 0x0808FB5C
+mode = "thumb"
+note = "pointer at 0x0850D52C"
+
+[[extra_func]]
+addr = 0x0808FBDC
+mode = "thumb"
+note = "pointer at 0x0850D774, 0x0850D9BC, 0x0850DC04"
+
+[[extra_func]]
+addr = 0x0808FC50
+mode = "thumb"
+note = "pointer at 0x0850DE5C, 0x0850E1C8, 0x0850E410"
+
+[[extra_func]]
+addr = 0x0808FE04
+mode = "thumb"
+note = "pointer at 0x0850EAFC"
+
+[[extra_func]]
+addr = 0x0808FEB8
+mode = "thumb"
+note = "pointer at 0x0850ED50, 0x0850EF98, 0x0850F304"
+
+[[extra_func]]
+addr = 0x0808FF28
+mode = "thumb"
+note = "pointer at 0x0850F8C8, 0x0850FB10, 0x0850FE7C"
+
+[[extra_func]]
+addr = 0x0808FF98
+mode = "thumb"
+note = "pointer at 0x08510564, 0x085107AC, 0x085109F4"
+
+[[extra_func]]
+addr = 0x08090008
+mode = "thumb"
+note = "pointer at 0x08511578, 0x085118E4, 0x08511B2C"
+
+[[extra_func]]
+addr = 0x0809007C
+mode = "thumb"
+note = "pointer at 0x085126AC, 0x08512B3C, 0x08512EA8"
+
+[[extra_func]]
+addr = 0x080901A8
+mode = "thumb"
+note = "pointer at 0x085136B8, 0x08513900, 0x08513C6C"
+
+[[extra_func]]
+addr = 0x0809021C
+mode = "thumb"
+note = "pointer at 0x08514FF8, 0x08515240, 0x085155AC"
+
+[[extra_func]]
+addr = 0x08090290
+mode = "thumb"
+note = "pointer at 0x08515DA8"
+
+[[extra_func]]
+addr = 0x08090330
+mode = "thumb"
+note = "pointer at 0x08516004, 0x0851624C, 0x085165B8"
+
+[[extra_func]]
+addr = 0x080903C4
+mode = "thumb"
+note = "pointer at 0x0851725C, 0x085175C8, 0x08517934"
+
+[[extra_func]]
+addr = 0x080967D0
+mode = "thumb"
+note = "pointer at 0x08097D00"
+
+[[extra_func]]
+addr = 0x08096FA0
+mode = "thumb"
+note = "pointer at 0x080980EC"
+
+[[extra_func]]
+addr = 0x08098108
+mode = "thumb"
+note = "pointer at 0x0808D314"
+
+[[extra_func]]
+addr = 0x0809919C
+mode = "thumb"
+note = "pointer at 0x08099834"
+
+[[extra_func]]
+addr = 0x08099468
+mode = "thumb"
+note = "pointer at 0x08099814"
+
+[[extra_func]]
+addr = 0x08099720
+mode = "thumb"
+note = "pointer at 0x0808D318"
+
+[[extra_func]]
+addr = 0x08099838
+mode = "thumb"
+note = "pointer at 0x0808D4A0"
+
+[[extra_func]]
+addr = 0x0809A834
+mode = "thumb"
+note = "pointer at 0x0809AEE4"
+
+[[extra_func]]
+addr = 0x0809ADE8
+mode = "thumb"
+note = "pointer at 0x0808D4A4"
+
+[[extra_func]]
+addr = 0x0809AEE8
+mode = "thumb"
+note = "pointer at 0x0808D648"
+
+[[extra_func]]
+addr = 0x0809C1B4
+mode = "thumb"
+note = "pointer at 0x0809D6A4"
+
+[[extra_func]]
+addr = 0x0809C4E8
+mode = "thumb"
+note = "pointer at 0x0809D684"
+
+[[extra_func]]
+addr = 0x0809C8F4
+mode = "thumb"
+note = "pointer at 0x0809D778"
+
+[[extra_func]]
+addr = 0x0809CC2C
+mode = "thumb"
+note = "pointer at 0x0809D7DC"
+
+[[extra_func]]
+addr = 0x0809D574
+mode = "thumb"
+note = "pointer at 0x0808D64C"
+
+[[extra_func]]
+addr = 0x0809D848
+mode = "thumb"
+note = "pointer at 0x0809D7E0"
+
+[[extra_func]]
+addr = 0x0809D878
+mode = "thumb"
+note = "pointer at 0x0808DB30"
+
+[[extra_func]]
+addr = 0x0809E468
+mode = "thumb"
+note = "pointer at 0x0809F9F4"
+
+[[extra_func]]
+addr = 0x0809EDFC
+mode = "thumb"
+note = "pointer at 0x0809E550, 0x0809EDD4"
+
+[[extra_func]]
+addr = 0x0809EF84
+mode = "thumb"
+note = "pointer at 0x0809E554, 0x0809EDD8"
+
+[[extra_func]]
+addr = 0x0809F018
+mode = "thumb"
+note = "pointer at 0x0809FAC8"
+
+[[extra_func]]
+addr = 0x0809F4A8
+mode = "thumb"
+note = "pointer at 0x0809FB68"
+
+[[extra_func]]
+addr = 0x0809F8C8
+mode = "thumb"
+note = "pointer at 0x0808DB34"
+
+[[extra_func]]
+addr = 0x0809FB6C
+mode = "thumb"
+note = "pointer at 0x0808E128"
+
+[[extra_func]]
+addr = 0x080A05B4
+mode = "thumb"
+note = "pointer at 0x080A1048"
+
+[[extra_func]]
+addr = 0x080A099C
+mode = "thumb"
+note = "pointer at 0x080A116C"
+
+[[extra_func]]
+addr = 0x080A0B44
+mode = "thumb"
+note = "pointer at 0x080A1204"
+
+[[extra_func]]
+addr = 0x080A0F64
+mode = "thumb"
+note = "pointer at 0x0808E12C"
+
+[[extra_func]]
+addr = 0x080A1208
+mode = "thumb"
+note = "pointer at 0x0808E398"
+
+[[extra_func]]
+addr = 0x080A1FF4
+mode = "thumb"
+note = "pointer at 0x080A2784"
+
+[[extra_func]]
+addr = 0x080A230C
+mode = "thumb"
+note = "pointer at 0x080A27B4"
+
+[[extra_func]]
+addr = 0x080A2698
+mode = "thumb"
+note = "pointer at 0x0808E39C"
+
+[[extra_func]]
+addr = 0x080A27B8
+mode = "thumb"
+note = "pointer at 0x0808E528"
+
+[[extra_func]]
+addr = 0x080A35D0
+mode = "thumb"
+note = "pointer at 0x080A4AC8"
+
+[[extra_func]]
+addr = 0x080A3D2C
+mode = "thumb"
+note = "pointer at 0x080A4BA8"
+
+[[extra_func]]
+addr = 0x080A47A0
+mode = "thumb"
+note = "pointer at 0x080A4C70"
+
+[[extra_func]]
+addr = 0x080A49A8
+mode = "thumb"
+note = "pointer at 0x0808E52C"
+
+[[extra_func]]
+addr = 0x080A4BB0
+mode = "thumb"
+note = "pointer at 0x080A4BAC"
+
+[[extra_func]]
+addr = 0x080A4D08
+mode = "thumb"
+note = "pointer at 0x0808E940"
+
+[[extra_func]]
+addr = 0x080A68B0
+mode = "thumb"
+note = "pointer at 0x080A7F2C"
+
+[[extra_func]]
+addr = 0x080A6BE8
+mode = "thumb"
+note = "pointer at 0x080A7FF4"
+
+[[extra_func]]
+addr = 0x080A705C
+mode = "thumb"
+note = "pointer at 0x080A808C"
+
+[[extra_func]]
+addr = 0x080A74E8
+mode = "thumb"
+note = "pointer at 0x080A8160"
+
+[[extra_func]]
+addr = 0x080A756C
+mode = "thumb"
+note = "pointer at 0x0808E7A0"
+
+[[extra_func]]
+addr = 0x080A7DEC
+mode = "thumb"
+note = "pointer at 0x0808E944"
+
+[[extra_func]]
+addr = 0x080A8164
+mode = "thumb"
+note = "pointer at 0x0808EC98"
+
+[[extra_func]]
+addr = 0x080A92C0
+mode = "thumb"
+note = "pointer at 0x080A98DC"
+
+[[extra_func]]
+addr = 0x080A97E0
+mode = "thumb"
+note = "pointer at 0x0808EC9C"
+
+[[extra_func]]
+addr = 0x080A9950
+mode = "thumb"
+note = "pointer at 0x0808EFE4"
+
+[[extra_func]]
+addr = 0x080AB2D8
+mode = "thumb"
+note = "pointer at 0x0808EFE8"
+
+[[extra_func]]
+addr = 0x080AB2F8
+mode = "thumb"
+note = "pointer at 0x0808E02C"
+
+[[extra_func]]
+addr = 0x080AC81C
+mode = "thumb"
+note = "pointer at 0x0808E030"
+
+[[extra_func]]
+addr = 0x080AC844
+mode = "thumb"
+note = "pointer at 0x0808E298"
+
+[[extra_func]]
+addr = 0x080AD534
+mode = "thumb"
+note = "pointer at 0x080AE17C"
+
+[[extra_func]]
+addr = 0x080AE080
+mode = "thumb"
+note = "pointer at 0x0808E29C"
+
+[[extra_func]]
+addr = 0x080AE184
+mode = "thumb"
+note = "pointer at 0x080AE180"
+
+[[extra_func]]
+addr = 0x080AE1B4
+mode = "thumb"
+note = "pointer at 0x0808E828"
+
+[[extra_func]]
+addr = 0x080AE420
+mode = "thumb"
+note = "pointer at 0x080AF3BC"
+
+[[extra_func]]
+addr = 0x080AF2AC
+mode = "thumb"
+note = "pointer at 0x0808E82C"
+
+[[extra_func]]
+addr = 0x080AF3C4
+mode = "thumb"
+note = "pointer at 0x080AF3C0"
+
+[[extra_func]]
+addr = 0x080AF3F4
+mode = "thumb"
+note = "pointer at 0x0808EB90"
+
+[[extra_func]]
+addr = 0x080B0288
+mode = "thumb"
+note = "pointer at 0x0808EB04"
+
+[[extra_func]]
+addr = 0x080B0F70
+mode = "thumb"
+note = "pointer at 0x0808EB94"
+
+[[extra_func]]
+addr = 0x080B0F9C
+mode = "thumb"
+note = "pointer at 0x0808EB08"
+
+[[extra_func]]
+addr = 0x080B0FC4
+mode = "thumb"
+note = "pointer at 0x0808EEC4"
+
+[[extra_func]]
+addr = 0x080B2058
+mode = "thumb"
+note = "pointer at 0x080B23C4"
+
+[[extra_func]]
+addr = 0x080B2200
+mode = "thumb"
+note = "pointer at 0x080B24B4"
+
+[[extra_func]]
+addr = 0x080B22E8
+mode = "thumb"
+note = "pointer at 0x0808EEC8"
+
+[[extra_func]]
+addr = 0x080B24B8
+mode = "thumb"
+note = "pointer at 0x0808F0BC"
+
+[[extra_func]]
+addr = 0x080B2780
+mode = "thumb"
+note = "pointer at 0x0808F0C0"
+
+[[extra_func]]
+addr = 0x080B280C
+mode = "thumb"
+note = "pointer at 0x080B2598"
+
+[[extra_func]]
+addr = 0x080B3648
+mode = "thumb"
+note = "pointer at 0x080B25A0"
+
+[[extra_func]]
+addr = 0x080B4690
+mode = "thumb"
+note = "pointer at 0x080B4C30"
+
+[[extra_func]]
+addr = 0x080B4C34
+mode = "thumb"
+note = "pointer at 0x0808F080, 0x0808FC7C"
+
+[[extra_func]]
+addr = 0x080B5F94
+mode = "thumb"
+note = "pointer at 0x080B6408"
+
+[[extra_func]]
+addr = 0x080B6178
+mode = "thumb"
+note = "pointer at 0x080B64A0"
+
+[[extra_func]]
+addr = 0x080B6324
+mode = "thumb"
+note = "pointer at 0x0808F084, 0x0808FC80"
+
+[[extra_func]]
+addr = 0x080B846C
+mode = "thumb"
+note = "pointer at 0x080BBA90, 0x080BBA9C"
+
+[[extra_func]]
+addr = 0x080B8480
+mode = "thumb"
+note = "pointer at 0x080BBA94"

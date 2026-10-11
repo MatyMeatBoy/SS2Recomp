@@ -1,0 +1,248 @@
+# Shining Soul II (Europe, AU2P, revision 0).
+
+[game]
+name = "Shining Soul II"
+short_name = "shining_soul_2"
+
+[program]
+name = "Shining Soul II (Europe)"
+id = "AU2P"
+load_address = 0x08000000
+size = 0x01000000
+entry_pc = 0x08000000
+static_resume_all = true
+# ~4 MB translation units keep compiler memory low (64 shards)
+codegen_shards = 64
+
+[identity]
+sha1 = "aa1288be9257337abdfe3034898cf6c7aa778fbc"
+
+[bios]
+path = "gbarecomp/bios/gba_bios.bin"
+sha1 = "300c20df6731a33952ded8c436f7f186d25d3492"
+hle = false
+
+[rom]
+path = "roms/shining_soul_2_europe.gba"
+sha1 = "aa1288be9257337abdfe3034898cf6c7aa778fbc"
+
+[save]
+# 64 KiB Flash: the ROM carries FLASH512_V131 (Nintendo agb_flash library).
+type = "flash512"
+size = 65536
+path = "saves/shining_soul_2_europe.sav"
+
+[runtime]
+debug_port = 19901
+window_title = "ShiningSoul2Recomp"
+
+[video]
+# GBA-panel colour correction (the palette was authored for the unlit
+# original GBA screen). Adaptive widescreen is owned by the mod catalog.
+screen = "frontlit"
+sharp_filter = true
+
+# ---------------------------------------------------------------------------
+# Code the cartridge copies verbatim into IWRAM and executes there.
+# Evidence: re/dumps (mGBA-based PrimatesGBA sim, frame 15010 of a 3-player
+# session) + executed-PC sampling (re/pcmap_report.py). Each span is the
+# maximal byte-exact ROM match; bytes before the start differ (data).
+# ---------------------------------------------------------------------------
+
+# ARM IRQ dispatcher: first instruction `mov r3, #0x4000000`.
+[[code_copy]]
+runtime_start = 0x03001740
+source_start = 0x08000104
+size = 0x00000800
+name = "irq_and_arm_helpers"
+note = "Exact frame-15010 IWRAM/ROM match; executed ARM at 0x03001740.. and 0x0300180C.."
+
+# Thumb routines; first halfword 0x7943 (ldrb r3,[r0,#5]).
+[[code_copy]]
+runtime_start = 0x03000E3C
+source_start = 0x080B656C
+size = 0x00000401
+name = "iwram_thumb_block"
+note = "Exact match 0x03000E3A..0x0300123C (first two bytes are data); executed Thumb+ARM"
+
+[[code_copy]]
+runtime_start = 0x03002390
+source_start = 0x080004F8
+size = 0x00000120
+name = "iwram_arm_a"
+note = "Exact match; executed ARM"
+
+[[code_copy]]
+runtime_start = 0x030026D0
+source_start = 0x080004B8
+size = 0x00000040
+name = "iwram_arm_b"
+note = "Exact match; executed ARM"
+
+[[extra_func]]
+addr = 0x03001740
+source_addr = 0x08000104
+mode = "arm"
+note = "IRQ dispatcher root (executed)"
+
+[[extra_func]]
+addr = 0x03000E3C
+source_addr = 0x080B656C
+mode = "thumb"
+note = "First instruction of the copied Thumb block (executed region starts here)"
+
+[[extra_func]]
+addr = 0x03002390
+source_addr = 0x080004F8
+mode = "arm"
+note = "Copied ARM routine (executed)"
+
+[[extra_func]]
+addr = 0x030026D0
+source_addr = 0x080004B8
+mode = "arm"
+note = "Copied ARM routine (executed)"
+
+# ---------------------------------------------------------------------------
+# Nintendo agb_flash library (FLASH512_V131 at 0x08366A50).
+# FlashSetupInfo tables: 0x08366AB0/0x08366ADC (id 0) and 0x08366B60/0x08366B8C
+# (makerId 0xC2, deviceId 0x1C = Macronix MX29L512, the identity the engine
+# reports for a 64 KiB part). The chip-specific bodies are reached only
+# through these pointers, so static discovery cannot find them.
+# ---------------------------------------------------------------------------
+
+[[extra_func]]
+addr = 0x080B8E78
+mode = "thumb"
+name = "ProgramFlashSector_MX"
+note = "FlashSetupInfo 0x08366B60[0] (Macronix table)"
+
+[[extra_func]]
+addr = 0x080B8D18
+mode = "thumb"
+name = "ProgramFlashSector_Default"
+note = "FlashSetupInfo 0x08366AB0[0]; copies VerifyFlashCoreFF to its frame at 0x080B8D38"
+
+[[extra_func]]
+addr = 0x080B8BD0
+mode = "thumb"
+name = "EraseFlashChip"
+note = "FlashSetupInfo 0x08366AB0[1] and 0x08366B60[1]"
+
+[[extra_func]]
+addr = 0x080B8C44
+mode = "thumb"
+name = "EraseFlashSector"
+note = "FlashSetupInfo 0x08366AB0[2] and 0x08366B60[2]"
+
+[[extra_func]]
+addr = 0x080B8B48
+mode = "thumb"
+name = "WaitForFlashWrite"
+note = "FlashSetupInfo 0x08366AB0[3] and 0x08366B60[3]"
+
+# ROM body of the 0x24-byte helper the library copies into a stack frame
+# (copy bounds pooled at 0x080B8D5C/0x080B8D60 = 0x080B8E3D..0x080B8E61).
+# src/ss2_flash_dispatch.h maps the live stack copy back to this body.
+[[extra_func]]
+addr = 0x080B8E3C
+mode = "thumb"
+name = "VerifyFlashCoreFF"
+note = "push {lr}; ... cmp r0,#0xff; beq loop; inline literal 0x030076E0 travels with the copy"
+
+# ---------------------------------------------------------------------------
+# Runtime-observed entries (first native run, 2026-10-10, 42 self-heal misses
+# reviewed by hand). Mid-function return points (0x0800113E, 0x080011A6,
+# 0x080013BC, 0x080B6A4A...) are not seeded: they belong to the functions below.
+# ---------------------------------------------------------------------------
+
+# Switch at 0x080070DC: cmp r5,#9; bhi; ldr r0,=0x080070EC; mov pc (10 cases).
+[[jump_table]]
+addr = 0x080070EC
+stride = 4
+count = 10
+format = "abs32"
+entries_mode = "thumb"
+name = "switch_080070DC"
+note = "misses 0x08007114/20/2C/38/44"
+
+# Switch at 0x0800723C: cmp r2,#9; bhi; ldr r0,=0x0800724C; mov pc (10 cases).
+[[jump_table]]
+addr = 0x0800724C
+stride = 4
+count = 10
+format = "abs32"
+entries_mode = "thumb"
+name = "switch_0800723C"
+note = "miss 0x08007274"
+
+# m4a sound driver command table (MPlayJumpTableCopy at 0x080B697A copies
+# these 36 Thumb pointers to RAM and the player calls them from there).
+[[jump_table]]
+addr = 0x080BB7E8
+stride = 4
+count = 36
+format = "abs32"
+entries_mode = "auto"
+name = "m4a_mplay_jump_table"
+note = "misses 0x080B6910..0x080B6AFE"
+
+# Main-loop state handlers, pointer table 0x080B9984 (loaded at 0x08000738).
+[[extra_func]]
+addr = 0x08001130
+mode = "thumb"
+note = "pointer table 0x080B9984[0]; bridged x1464"
+
+[[extra_func]]
+addr = 0x08001180
+mode = "thumb"
+note = "pointer table 0x080B9984[5]; bridged x2514"
+
+# m4a per-frame entries reached by register branches (bridged x2514 each).
+[[extra_func]]
+addr = 0x080B6528
+mode = "thumb"
+note = "observed per-frame indirect entry"
+
+[[extra_func]]
+addr = 0x080B6530
+mode = "thumb"
+note = "observed per-frame indirect entry"
+
+[[extra_func]]
+addr = 0x080B7202
+mode = "thumb"
+note = "observed per-frame indirect entry"
+
+# Cutscene after the first field (savestate re/states/hang1, 2026-10-10).
+# Misses were return points inside these never-discovered functions; each
+# start is a clean push {..,lr} right after the previous function's end.
+[[extra_func]]
+addr = 0x08009138
+mode = "thumb"
+note = "contains misses 0x0800922E, 0x080092B2"
+
+[[extra_func]]
+addr = 0x0800A998
+mode = "thumb"
+note = "pointer 0x08009A7C; contains miss 0x0800ACC0"
+
+[[extra_func]]
+addr = 0x0802704C
+mode = "thumb"
+note = "contains misses 0x080270C4, 0x0802752C, 0x080275BE (VBlank-wait loop that aborted the interpreter bridge)"
+
+[[extra_func]]
+addr = 0x080583EC
+mode = "thumb"
+note = "contains miss 0x080583F6"
+
+[[extra_func]]
+addr = 0x08059890
+mode = "thumb"
+note = "pointer 0x0803E374; contains miss 0x080598EA"
+
+[[extra_func]]
+addr = 0x0808F9E0
+mode = "thumb"
+note = "pointers 0x0850CACC/0x0850CE38/0x0850D080/0x0850D2C8; contains miss 0x0808FB5C"

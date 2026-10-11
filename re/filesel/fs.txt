@@ -1,0 +1,35 @@
+420 - - -
+4 D D D
+30 - - -
+4 R R R
+30 - - -
+4 A A A
+180 - - -
+4 S S S
+90 - - -
+4 A A A
+150 - - -
+shot s0
+5 - - -
+shot s1
+5 - - -
+shot s2
+5 - - -
+shot s3
+5 - - -
+shot s4
+5 - - -
+shot s5
+5 - - -
+shot s6
+5 - - -
+shot s7
+5 - - -
+shot s8
+5 - - -
+shot s9
+5 - - -
+shot s10
+5 - - -
+shot s11
+5 - - -
