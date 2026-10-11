@@ -1,6 +1,6 @@
-# ShiningSoul2Recomp v0.1.0 — 2026-10-11
+# ShiningSoul2Recomp v0.1.1 — 2026-10-11
 
-Primera release pública de prueba para Shining Soul II Europe AU2P.
+Release visual y de netplay para Shining Soul II Europe AU2P.
 
 ## Incluido
 
@@ -17,6 +17,8 @@ Primera release pública de prueba para Shining Soul II Europe AU2P.
 - Validación de identidad de ROM, BIOS, compilación y configuración de cable.
 - Pruebas silenciosas reproducibles para vista, transporte, pérdida, jitter y
   rollback.
+- Portada propia del launcher con identidad ShiningSoul2Recomp; se eliminaron
+  referencias visuales y textuales heredadas de otros proyectos.
 
 ## Resultados de validación
 

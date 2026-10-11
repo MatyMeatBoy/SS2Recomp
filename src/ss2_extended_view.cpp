@@ -340,7 +340,8 @@ void field_frame_policy(const gbarecomp::ExtendedViewFrameInfo*) {
 
 void configure_run_options(gbarecomp::RunOptions& opts) {
     // Adaptive widescreen follows the window/fullscreen aspect: 16:9 at 160
-    // lines is ~284 px; wider displays clamp to 480 (3:1), as Mario Kart does.
+    // lines is ~284 px; wider displays clamp to 480 while preserving the
+    // authored field data and the game's native vertical resolution.
     opts.mod_owns_adaptive_view = true;
     opts.max_view_width = 480;
     opts.max_resize_view_width = 480;
