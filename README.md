@@ -30,6 +30,7 @@ La prioridad de esta etapa es ampliar las pruebas entre PCs reales, cubrir más
 escenas del juego y validar reconexión durante una partida prolongada.
 
 La arquitectura está explicada en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Consulta también la [matriz de pruebas y límites del online](docs/NETPLAY_VALIDATION.md).
 
 El proyecto no incluye ROM, BIOS, partidas, estados ni código generado. Cada
 usuario debe aportar legalmente su propia copia de la ROM y su propio dump de
@@ -56,11 +57,13 @@ conservan composición nativa centrada.
 
 ## Multijugador
 
-Cada proceso simula las cuatro consolas y comparte únicamente las entradas y
-el estado de sincronización. El asiento 0 actúa como hub directo para tres o
+Cada proceso simula todas las consolas de la sesión y comparte las entradas,
+snapshots y el estado de sincronización. El asiento 0 actúa como hub directo para tres o
 cuatro jugadores; con dos jugadores se usa el enlace par a par. Para internet
 se puede usar Hamachi, Tailscale o una red con puertos UDP accesibles. La
-infraestructura también admite relay para una futura sala pública.
+base admite lobby y relay; su funcionamiento en una sesión pública de este
+proyecto todavía requiere validación. Hamachi y Tailscale no se han probado
+entre PCs en esta revisión.
 
 Ejemplo del host, con cuatro jugadores:
 
@@ -101,6 +104,13 @@ verificados.
 Estas pruebas validan el transporte y la determinación de la sesión. No
 sustituyen una partida prolongada entre cuatro PCs reales ni certifican todos
 los routers, VPN o proveedores de internet.
+
+La revisión posterior amplió las pruebas a 2, 3 y 4 procesos y corrigió la
+instalación del dispatcher Flash en cada consola. Las pruebas usan entradas
+neutras y reportaron cero ticks de replay, por lo que aún no validan
+correcciones de rollback durante gameplay. Un corte de red de dos segundos
+impidió completar una prueba de cuatro jugadores dentro de 60 segundos;
+la recuperación sigue pendiente. Véase la matriz enlazada arriba.
 
 ## Compilación
 

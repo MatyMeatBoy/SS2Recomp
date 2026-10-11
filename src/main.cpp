@@ -9,6 +9,7 @@
 #include "ss2_flash_dispatch.h"
 #if defined(GBAGAME_NETPLAY)
 #include "multiplayer_launch.h"
+#include "multiplayer_session.h"
 #include "gba_netplay_build_identity.h"
 #endif
 
@@ -17,6 +18,14 @@
 #endif
 
 namespace {
+
+#if defined(GBAGAME_NETPLAY)
+void setup_netplay_instance(gbarecomp::GbaInstance& instance) {
+    // Each console restores its own execution context at every scheduler turn.
+    // The single-player global hook alone does not survive that context switch.
+    instance.execution.ram_dispatch = &ss2::flash_stack_dispatch;
+}
+#endif
 
 void print_usage() {
     std::printf(
@@ -45,7 +54,8 @@ int main(int argc, char** argv) {
     // Content identity: SHA-256 of the supported Europe ROM.
     opts.netplay = gbarecomp::make_gba_netplay_launch("shining-soul-2-eu",
         GBARECOMP_NETPLAY_BUILD_ID,
-        "e5c64a1740263e9b26120e487f3688fbbf7b3954a2c043c0d84c333df467e0b2");
+        "e5c64a1740263e9b26120e487f3688fbbf7b3954a2c043c0d84c333df467e0b2",
+        &setup_netplay_instance);
     // Shining Soul II supports four players on one multiplayer cable.
     opts.netplay->max_players = 4;
     opts.netplay->player_count = 4;
