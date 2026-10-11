@@ -1,9 +1,33 @@
 # ShiningSoul2Recomp
 
+<p align="center">
+  <img src="docs/branding/boxart.png" alt="ShiningSoul2Recomp" width="300">
+</p>
+
+<p align="center">
+  <a href="https://github.com/MatyMeatBoy/SS2Recomp/releases/latest"><img src="https://img.shields.io/github/v/release/MatyMeatBoy/SS2Recomp?style=flat-square&color=d6a94a" alt="Latest release"></a>
+  <a href="https://github.com/MatyMeatBoy/SS2Recomp/releases"><img src="https://img.shields.io/github/downloads/MatyMeatBoy/SS2Recomp/total?style=flat-square&color=335c9e" alt="Downloads"></a>
+  <a href="https://github.com/MatyMeatBoy/SS2Recomp/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-586069?style=flat-square" alt="MIT license"></a>
+</p>
+
 Recompilación estática de **Shining Soul II (Europe, AU2P)** basada en
 gbarecomp. Incluye vista adaptativa 16:9 con datos reales del mapa, soporte de
 multijugador por cable emulado para 2 a 4 jugadores y la infraestructura de
 salas/netplay de recomp-ui.
+
+## Estado actual
+
+| Área | Estado |
+| --- | --- |
+| Recompilación estática | Verificada en los recorridos cubiertos |
+| Widescreen adaptativo | Campo 16:9 con mapa real a ambos lados |
+| Netplay 2 jugadores | Integrado |
+| Netplay 3–4 jugadores | Integrado; delay-sync recomendado |
+| Rollback 4 jugadores | Experimental, probado con red degradada |
+| Release Windows x64 | [v0.1.1](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.1.1) |
+
+La prioridad de esta etapa es ampliar las pruebas entre PCs reales, cubrir más
+escenas del juego y validar reconexión durante una partida prolongada.
 
 El proyecto no incluye ROM, BIOS, partidas, estados ni código generado. Cada
 usuario debe aportar legalmente su propia copia de la ROM y su propio dump de
