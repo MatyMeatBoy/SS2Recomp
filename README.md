@@ -29,6 +29,8 @@ salas/netplay de recomp-ui.
 La prioridad de esta etapa es ampliar las pruebas entre PCs reales, cubrir más
 escenas del juego y validar reconexión durante una partida prolongada.
 
+La arquitectura está explicada en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 El proyecto no incluye ROM, BIOS, partidas, estados ni código generado. Cada
 usuario debe aportar legalmente su propia copia de la ROM y su propio dump de
 BIOS.
