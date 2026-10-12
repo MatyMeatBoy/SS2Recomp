@@ -145,7 +145,12 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
         ~Detach() { s.input_machine(seat).ppu.set_presentation_observer(nullptr); }
     } detach{simulation, launch.local_seat};
     const bool cold = simulation.cycle() == 0;
-    const bool predictive=std::getenv("SS2_PREDICTIVE_ONLINE") &&
+    const bool authoritative=std::getenv("SS2_AUTHORITATIVE_ONLINE") &&
+        std::string(std::getenv("SS2_AUTHORITATIVE_ONLINE"))=="1";
+    const bool authority_prediction=std::getenv("SS2_AUTHORITATIVE_PREDICTION") &&
+        std::string(std::getenv("SS2_AUTHORITATIVE_PREDICTION"))=="1";
+    const bool predictive=authoritative ? launch.local_seat!=0 && authority_prediction :
+        std::getenv("SS2_PREDICTIVE_ONLINE") &&
         std::string(std::getenv("SS2_PREDICTIVE_ONLINE"))=="1";
     std::array<online::MailboxAssembler,4> mailboxes={
         online::MailboxAssembler(0),online::MailboxAssembler(1),
@@ -214,14 +219,16 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
         callbacks.synchronized=[&](auto tick){prediction->synchronize(tick);};
     }
     RecoveryConfig room_config;
-    room_config.streaming=predictive;
+    room_config.streaming=predictive || authoritative;
+    room_config.authoritative=authoritative;
     room_config.players = launch.player_count;
     room_config.seat = launch.local_seat;
     room_config.session = launch.session_id;
     room_config.finish_tick = boot.finish_tick;
     room_config.bind = launch.bind_endpoint;
     room_config.peer = launch.peer_endpoint;
-    room_config.identity = std::string(predictive ? "ss2-recovery/2-predictive:" : "ss2-recovery/1:") + launch.program_id + ":" + launch.build_identity +
+    room_config.identity = std::string(authoritative ? "ss2-recovery/3-authoritative:" :
+        predictive ? "ss2-recovery/2-predictive:" : "ss2-recovery/1:") + launch.program_id + ":" + launch.build_identity +
                            ":" + boot.expected_rom_sha1 + ":" + boot.bios->sha1_hex() + ":" +
                            std::to_string(static_cast<unsigned>(boot.save.type)) + ":" +
                            std::to_string(boot.save.size) + ":" +
@@ -230,7 +237,8 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
     room_config.directory = boot.config_directory / "netplay" / "recovery" /
                             ("room-" + std::to_string(launch.session_id)) /
                             ("seat-" + std::to_string(launch.local_seat));
-    if (predictive) room_config.directory /= "predictive-v2";
+    if (authoritative) room_config.directory /= "authoritative-v3";
+    else if (predictive) room_config.directory /= "predictive-v2";
     if (testing)
         if (const char *path = std::getenv("SS2_RECOVERY_DIRECTORY"))
             room_config.directory = path;
@@ -246,6 +254,9 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
     window.set_host_overlay(&draw_netplay_wait);
     std::vector<std::uint8_t> waiting_image(width*160*3,17);
     GbaNetplayPacer pacer;
+    GbaNetplayPacer input_pacer;
+    std::vector<double> presentation_gaps;
+    GbaNetplayPacer::Clock::time_point last_present{};
     std::string old_title;
     std::uint32_t reported = UINT32_MAX;
     while (!room.finished()) {
@@ -279,6 +290,13 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
             buttons = row[launch.local_seat];
         }
         auto now = GbaNetplayPacer::Clock::now();
+        // Sample controls at an independent cadence even if the authoritative
+        // world has not arrived yet. No speculative whole-world restores on
+        // this path: input latency is preferable to repeated long replay stalls.
+        if (authoritative && launch.local_seat && !prediction && input_pacer.ready(now)) {
+            room.submit_input(room.tick(),buttons);
+            input_pacer.forwarded(now);
+        }
         bool advanced = room.poll(buttons, prediction ? true : pacer.ready(now));
         bool presented = advanced;
         if (prediction) {
@@ -300,6 +318,12 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
             }
         }
         if (presented) {
+            if (testing) {
+                auto stamp=GbaNetplayPacer::Clock::now();
+                if (last_present!=GbaNetplayPacer::Clock::time_point{})
+                    presentation_gaps.push_back(std::chrono::duration<double,std::milli>(stamp-last_present).count());
+                last_present=stamp;
+            }
             if (!prediction) pacer.forwarded(now);
             if (auto *pixels = presentation.pixels()) {
                 auto w = presentation.width();
@@ -354,6 +378,15 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
             static_cast<unsigned long long>(prediction->forwards),
             static_cast<unsigned long long>(prediction->replays),
             static_cast<unsigned long long>(prediction->corrections),prediction->history_bytes());
+    if (!presentation_gaps.empty()) {
+        double total=0;
+        unsigned slow=0;
+        for (auto ms:presentation_gaps) { total+=ms; slow+=ms>33.4; }
+        std::sort(presentation_gaps.begin(),presentation_gaps.end());
+        std::printf("online cadence samples=%zu mean_ms=%.3f p95_ms=%.3f max_ms=%.3f gaps_over_33ms=%u\n",
+            presentation_gaps.size(),total/presentation_gaps.size(),
+            presentation_gaps[(presentation_gaps.size()-1)*95/100],presentation_gaps.back(),slow);
+    }
     if (testing)
         if (const char *path = std::getenv("SS2_RECOVERY_STATE_OUT")) {
             auto b = prediction ? prediction->capture() : simulation.save_state();

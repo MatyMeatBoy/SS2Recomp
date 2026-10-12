@@ -49,6 +49,52 @@ Prediction has a finite horizon; sustained outages stop progress. There is no
 zero-latency, zero-stutter, host-migration or Internet-combat guarantee.
 Discord/ICE adoption for this backend is not yet implemented.
 
+## Independent host authority (development)
+
+Set `SS2_AUTHORITATIVE_ONLINE=1` on **every** peer to select the next backend
+through the experimental LAN/Hamachi path. It uses a separate protocol identity
+and `authoritative-v3` recovery directory. The public launcher default remains
+unchanged while gameplay and performance qualification are incomplete.
+
+After the initial save exchange and startup barrier, the host advances its
+linked world without waiting for input or hash acknowledgments from guests.
+Guest messages carry monotonically ordered input samples, independent of their
+prediction timeline. The host applies the latest sample on its next tick;
+samples expire after 250 ms, and a disconnected or repairing seat receives
+neutral input. Its internal console stays connected to the local cable.
+The host does not rewind for a late command.
+
+The default authoritative path displays confirmed world frames without
+whole-world prediction or rollback. Controls are sampled independently at the
+local input cadence, even while waiting for the next world frame. This trades
+round-trip input latency for avoiding expensive speculative state restoration.
+Set `SS2_AUTHORITATIVE_PREDICTION=1` explicitly to compare the older predictive
+path; it is a research option, not the fluency default.
+A reconnect or hash mismatch transfers the current authoritative snapshot to
+**that guest only**. The host and healthy peers do not restore old snapshots or
+enter a new global synchronization barrier. In-flight replies are drained during
+repair. Excessive divergence or outbound queue pressure disconnects the affected
+seat rather than stopping everyone. Catch-up processes at most one committed
+world frame per UI/network pump; replay retains its separate time budget.
+
+This is a host-authoritative whole-world implementation, not yet native entity
+replication. Each PC still simulates the internally linked consoles. An isolated
+client stops receiving new world frames; other peers keep receiving the host's
+world. Optional prediction has a finite horizon and can visibly correct movement.
+Expensive simulation or replay can still miss the frame budget.
+Disconnect neutrality does not mean invulnerability: the game may still damage
+that character. Host migration and Discord/ICE routing are not implemented here.
+
+The next game-level adapter must give player commands acknowledged sequence IDs,
+make combat, loot, inventory, RNG and map transitions host-owned, deduplicate
+reliable events across reconnects and interpolate remote entity presentation
+without modifying authoritative state. These are required before describing
+the result as a completed modern ARPG networking system.
+
+Design references: Glenn Fiedler's
+[client prediction and server authority](https://gafferongames.com/post/networked_physics_2004/)
+and [snapshot interpolation](https://gafferongames.com/post/snapshot_interpolation/).
+
 ## Qualification so far
 
 - Portable core: checksum corruption/truncation, duplicate and partial chunks,
@@ -58,6 +104,31 @@ Discord/ICE adoption for this backend is not yet implemented.
   per direction: identical final snapshots, real rollback corrections observed.
 - Four native peers, 180 frames, three-second network interruption at tick 60:
   resumed and finished with identical snapshots.
+- Host-authoritative backend: four native peers, 300 frames, three-second
+  interruption of all guests: host continued advancing; identical final states.
+- Host-authoritative backend: interruption of guest 1 only: the host and both
+  healthy guests advanced during the outage, then all four final states matched.
+- Host-authoritative backend: injected memory divergence at frame 60 was repaired
+  and all four peers finished with identical states.
+
+The recorded outage progress uses logs emitted every 30 ticks, so it is a
+coarse lower bound, not a frame-rate measurement. The three-console story probe
+also exposed insufficient real-time throughput on this development PC; reconnect
+success is not evidence of a sustained 60 Hz gameplay budget.
+
+A 120-frame, three-console story fixture measured state restore at 57.321 ms
+mean / 75.944 ms p95, versus 3.247 ms mean serialization and 2.575 ms mean
+probe digest calculation. This fixture is not a dungeon benchmark. Its restore
+cost is sufficient to reject frequent whole-world rollback as the default
+fluency strategy on this PC. Native player movement prediction will need a
+smaller, game-specific reconciliation domain instead.
+
+The latest four-peer, 300-frame headless run with 50 ms proxy delay per direction
+passed final-state equality, but failed the fluency objective: mean presentation
+gaps were about 39 ms and p95 gaps about 57–62 ms. All four peers shared one
+development PC, so this is not a measurement of a friend's Internet connection.
+It nevertheless prevents declaring the candidate ready. Correctness and fluency
+qualification are separate; a `passed` recovery result means correctness only.
 
 Native tests above exercise boot/menu simulation, not a connected dungeon battle.
 The proxy approximates application delay on local TCP; it is not a real WAN or

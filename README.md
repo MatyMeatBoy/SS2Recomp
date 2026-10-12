@@ -63,7 +63,11 @@ Hamachi is optional: any reachable LAN/VPN works. Tests on one PC do not prove
 performance between homes. Each PC simulates every linked console internally;
 owner saves are exchanged at startup. The current recovery profile waits for
 confirmed inputs and matching state digests, so network latency can reduce
-forward progress. Prediction and pipelined input delivery are under development.
+forward progress. Development builds offer opt-in prediction and an independent
+host-authoritative backend (`SS2_AUTHORITATIVE_ONLINE=1` on every PC): a missing
+guest no longer stops the host or healthy peers, and recovery repairs that guest
+individually. This is not yet the public default or qualified for sustained combat
+and real-time performance. See [implementation and test limits](docs/MODERN_ONLINE.md).
 
 The original host owns the recovery checkpoint and input journal. Keep the room
 folder to resume after a crash or connection loss. The original host must return;

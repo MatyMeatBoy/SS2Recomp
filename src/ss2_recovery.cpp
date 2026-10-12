@@ -184,7 +184,13 @@ struct Connection {
     std::size_t sent = 0;
     int seat = -1;
     std::uint32_t verified = 0;
-    bool connecting = false, ready = false, input = false, ack = false, ended = false;
+    std::uint32_t sync_tick = 0, input_sequence = 0;
+    Digest sync_hash{};
+    std::uint16_t held_buttons = 0;
+    bool input_seen = false;
+    unsigned repairs = 0;
+    Clock::time_point input_heard = Clock::now();
+    bool connecting = false, ready = false, input = false, ack = false, ended = false, read_closed = false;
     Clock::time_point heard = Clock::now(), ping = Clock::now();
     Connection() = default;
     explicit Connection(SOCKET s) : socket(s) {}
@@ -218,6 +224,10 @@ struct Connection {
     bool pump() {
         if (socket == INVALID_SOCKET)
             return false;
+        if (read_closed && rx.empty()) {
+            close();
+            return false;
+        }
         if (connecting) {
             fd_set writable, errors;
             FD_ZERO(&writable);
@@ -270,8 +280,10 @@ struct Connection {
                 return false;
             }
             if (!n) {
-                close();
-                return false;
+                // TCP may deliver the final acknowledgment and FIN together.
+                // Let the caller consume complete buffered messages first.
+                read_closed = true;
+                break;
             }
             heard = Clock::now();
             budget -= n;
@@ -333,6 +345,7 @@ struct RecoveryRoom::Impl {
     std::uint32_t tick = 0, epoch = 1;
     bool initialized = false, awaiting_input = false, awaiting_ack = false, done = false,
          ending = false;
+    bool authority_started = false;
     unsigned repairs = 0;
     Clock::time_point retry = Clock::now(), phase_started = Clock::now();
     std::filesystem::path checkpoint, journal, meta;
@@ -342,16 +355,27 @@ struct RecoveryRoom::Impl {
     };
     std::map<std::uint32_t, InputRow> future_inputs;
     std::map<std::uint32_t, Digest> recent_hashes;
+    std::uint32_t input_serial = 0;
+    unsigned end_ack_mask = 0;
     void restore_committed() {
         callbacks.restore(committed);
         if (callbacks.synchronized) callbacks.synchronized(tick);
     }
     bool ready() const {
         return initialized && !ending && !done &&
-            (config.seat == 0 ? all(&Connection::ready) :
+            (config.seat == 0 ? (config.authoritative ? authority_started : all(&Connection::ready)) :
              !links.empty() && links[0]->ready);
     }
     void accept_input(unsigned seat, std::uint32_t frame, std::uint16_t buttons) {
+        if (config.authoritative) {
+            if (seat>=config.players || buttons>1023) throw std::runtime_error("invalid authoritative input");
+            if (!seat) return; // Host samples its own input at the simulation tick.
+            auto& c=*seats[seat];
+            if (c.input_seen && frame<=c.input_sequence) return;
+            c.input_sequence=frame; c.input_seen=true; c.held_buttons=buttons;
+            c.input_heard=Clock::now();
+            return;
+        }
         if (frame < tick) return;
         if (frame - tick >= 128 || buttons > 1023)
             throw std::runtime_error("input outside bounded streaming window");
@@ -367,11 +391,16 @@ struct RecoveryRoom::Impl {
         else {
             RecoveryBytes body;
             put(body, buttons);
-            links[0]->queue(StreamInput, epoch, frame, body);
+            // Input ordering is independent of prediction ticks: a snapshot
+            // repair may move the local timeline backwards, but fresh input
+            // must never be mistaken for an old sample.
+            if (config.authoritative && input_serial == UINT32_MAX)
+                throw std::runtime_error("authoritative input sequence overflow");
+            links[0]->queue(StreamInput, epoch, config.authoritative ? ++input_serial : frame, body);
         }
     }
     Impl(RecoveryConfig c, RecoveryCallbacks cb) : config(std::move(c)), callbacks(std::move(cb)) {
-        if (config.players < 2 || config.players > 4 || config.seat >= config.players ||
+        if ((config.authoritative && !config.streaming) || config.players < 2 || config.players > 4 || config.seat >= config.players ||
             !config.session || config.identity.empty() || config.identity.size() > 2048)
             throw std::runtime_error("invalid recovery room configuration");
         std::filesystem::create_directories(config.directory);
@@ -530,14 +559,24 @@ struct RecoveryRoom::Impl {
     }
     void broadcast(Type type, const RecoveryBytes &body = {}) {
         for (unsigned s = 1; s < config.players; ++s)
-            if (seats[s])
-                seats[s]->queue(type, epoch, tick, body);
+            if (seats[s]) {
+                try { seats[s]->queue(type, epoch, tick, body); }
+                catch (...) { if (!config.authoritative) throw; disconnect(*seats[s]); }
+            }
     }
     bool all(bool Connection::*flag) const {
         for (unsigned s = 1; s < config.players; ++s)
             if (!seats[s] || !(seats[s]->*flag))
                 return false;
         return true;
+    }
+    void synchronize_peer(Connection& c) {
+        // The authority and healthy peers never roll back or stop for rejoin.
+        c.ready=false; c.input_seen=false; c.held_buttons=0;
+        c.verified=c.sync_tick=tick; c.sync_hash=committed_hash;
+        RecoveryBytes body;
+        append_digest(body,committed_hash); blob(body,committed);
+        c.queue(State,epoch,tick,body);
     }
     void synchronize() {
         if (!initialized)
@@ -570,7 +609,7 @@ struct RecoveryRoom::Impl {
         if (c.seat > 0 && seats[c.seat] == &c) {
             seats[c.seat] = nullptr;
             c.close();
-            synchronize();
+            if (!config.authoritative && !(ending && c.ended)) synchronize();
         } else
             c.close();
     }
@@ -603,6 +642,7 @@ struct RecoveryRoom::Impl {
             c.seat = static_cast<int>(seat);
             seats[seat] = &c;
             owners[seat] = std::move(owner);
+            const bool initial_room=!initialized;
             if (!initialized) {
                 bool present = true;
                 for (unsigned s = 1; s < config.players; ++s)
@@ -617,7 +657,11 @@ struct RecoveryRoom::Impl {
                 initialized = true;
                 save_checkpoint();
             }
-            synchronize();
+            if (config.authoritative) {
+                if (initial_room) {
+                    for (unsigned s=1;s<config.players;++s) synchronize_peer(*seats[s]);
+                } else synchronize_peer(c);
+            } else synchronize();
             return;
         }
         if (p.type == Ping) {
@@ -630,13 +674,24 @@ struct RecoveryRoom::Impl {
             throw std::runtime_error("recovery message before hello");
         if (p.epoch != epoch)
             return;
+        if (config.authoritative && !c.ready && (p.type == StreamInput || p.type == StreamHash)) {
+            // A repair snapshot follows already-framed traffic on TCP. Drain
+            // replies to those old frames until Ready acknowledges the new
+            // snapshot; they must not disconnect the repairing guest.
+            if (p.type == StreamInput) {
+                if (r.word()>1023) throw std::runtime_error("invalid streaming buttons");
+            } else r.digest();
+            r.done();
+            return;
+        }
         if (p.type == Ready) {
             auto hash = r.digest();
             r.done();
-            if (p.tick != tick || hash != committed_hash)
+            if (p.tick != (config.authoritative ? c.sync_tick : tick) ||
+                hash != (config.authoritative ? c.sync_hash : committed_hash))
                 throw std::runtime_error("recovery ready digest mismatch");
             c.ready = true;
-            c.verified = tick;
+            c.verified = p.tick;
         } else if (p.type == StreamInput && config.streaming && c.ready) {
             auto buttons = r.word();
             r.done();
@@ -647,10 +702,18 @@ struct RecoveryRoom::Impl {
             r.done();
             auto expected = recent_hashes.find(p.tick);
             if (p.tick <= c.verified) return;
+            if (expected == recent_hashes.end() && config.authoritative) {
+                synchronize_peer(c); return;
+            }
             if (expected == recent_hashes.end())
                 throw std::runtime_error("streaming acknowledgement outside history");
             if (hash != expected->second) {
                 std::fprintf(stderr, "recovery divergence seat=%d tick=%u; restoring host state\n", c.seat, p.tick);
+                if (config.authoritative) {
+                    if (++c.repairs>3) disconnect(c);
+                    else synchronize_peer(c);
+                    return;
+                }
                 if (++repairs > 3) {
                     fatal_error = "persistent streaming state divergence";
                     throw std::runtime_error(fatal_error);
@@ -685,6 +748,7 @@ struct RecoveryRoom::Impl {
             if (p.tick != tick)
                 throw std::runtime_error("invalid recovery end tick");
             c.ended = true;
+            end_ack_mask |= 1u << c.seat;
         } else
             throw std::runtime_error("unexpected recovery message for current phase");
     }
@@ -820,29 +884,35 @@ struct RecoveryRoom::Impl {
                 }
             }
             std::erase_if(links, [](const auto &c) { return c->socket == INVALID_SOCKET; });
-            if (!initialized || !all(&Connection::ready))
-                return false;
+            if (config.authoritative && initialized && all(&Connection::ready)) authority_started=true;
             if (ending) {
-                if (all(&Connection::ended)) {
-                    bool flushed = true;
-                    for (unsigned s = 1; s < config.players; ++s)
-                        flushed &= seats[s]->tx.empty();
-                    if (flushed)
-                        done = true;
-                }
+                // A completed guest may close before the other acknowledgments
+                // arrive. Preserve its acknowledgment independently of sockets.
+                if (end_ack_mask == ((1u << config.players)-2)) done=true;
                 return false;
             }
+            if (!initialized || (config.authoritative ? !authority_started : !all(&Connection::ready)))
+                return false;
             if (config.finish_tick && tick >= config.finish_tick && !awaiting_ack &&
                 !awaiting_input) {
                 if (config.streaming)
                     for (unsigned s = 1; s < config.players; ++s)
-                        if (seats[s]->verified < tick) return false;
+                        if (!seats[s] || !seats[s]->ready || seats[s]->verified < tick) return false;
                 save_checkpoint();
+                end_ack_mask=0;
                 broadcast(End);
                 ending = true;
                 return false;
             }
             if (config.streaming) {
+                if (config.authoritative) {
+                    if (!allow) return false;
+                    inputs.fill(0); inputs[0]=buttons;
+                    for (unsigned s=1;s<config.players;++s)
+                        if (seats[s] && seats[s]->ready && seats[s]->input_seen &&
+                            Clock::now()-seats[s]->input_heard<std::chrono::milliseconds(250))
+                            inputs[s]=seats[s]->held_buttons;
+                } else {
                 auto it = future_inputs.find(tick);
                 if (it == future_inputs.end() || it->second.mask != (1u << config.players) - 1)
                     return false;
@@ -851,6 +921,7 @@ struct RecoveryRoom::Impl {
                     if (tick - seats[s]->verified >= 120) return false;
                 inputs = it->second.keys;
                 future_inputs.erase(it);
+                }
                 callbacks.advance({inputs.data(), config.players});
                 committed = callbacks.capture();
                 committed_hash = digest(committed);
@@ -940,8 +1011,12 @@ struct RecoveryRoom::Impl {
             }
             Packet p;
             unsigned count = 0;
-            while (count++ < 32 && c.next(p))
+            while (count++ < 32 && c.next(p)) {
                 advanced = receive_guest(c, p, buttons) || advanced;
+                // Catch-up is serviced between window/network pumps rather
+                // than running a burst of up to 32 full linked-world frames.
+                if (config.authoritative && advanced) break;
+            }
             c.heartbeat(epoch, tick);
             if (ending && c.tx.empty())
                 done = true;
@@ -956,7 +1031,7 @@ struct RecoveryRoom::Impl {
             for (unsigned s = 1; s < config.players; ++s)
                 if (!seats[s] || !seats[s]->ready)
                     waiting |= 1u << s;
-            if (waiting) {
+            if (waiting && !(config.authoritative && authority_started)) {
                 std::string s = "Esperando reconexión:";
                 for (unsigned i = 1; i < config.players; ++i)
                     if (waiting & (1u << i))

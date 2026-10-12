@@ -16,6 +16,7 @@ struct RecoveryConfig {
     std::string bind, peer, identity;
     std::filesystem::path directory;
     bool streaming = false;
+    bool authoritative = false;
 };
 // Guest-independent seam. Capture includes the entire deterministic system.
 // Restore must be atomic; render/audio state is never an authority for recovery.

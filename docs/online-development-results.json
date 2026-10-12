@@ -107,5 +107,219 @@
       3,
       4
     ]
+  },
+  "authoritative_no_rollback_delay": {
+    "settings": {
+      "native": true,
+      "predictive": false,
+      "authoritative": true,
+      "launcher": false,
+      "executable": null,
+      "players": 4,
+      "fault": "none",
+      "frames": 300,
+      "at": 60,
+      "cut_seconds": 12,
+      "fault_seat": null,
+      "delay_ms": 50.0,
+      "initial_state": null,
+      "inputs": "re\\party_stress_inputs_4.txt",
+      "timeout": 60.0
+    },
+    "elapsed": 13.08,
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 8749983,
+    "executable_sha256": "5778dd25d9312201fa352c1cf326ec10940d348b3e267af34eaa2740a68b5b01",
+    "host_ticks_during_cut": 0,
+    "healthy_ticks_during_cut": {},
+    "state_sha256": {
+      "seat0": "9edbdeb6f794daff0452b9541baeea44e2c551ac1ac475ef8e8e62c8545b0add",
+      "seat1": "9edbdeb6f794daff0452b9541baeea44e2c551ac1ac475ef8e8e62c8545b0add",
+      "seat2": "9edbdeb6f794daff0452b9541baeea44e2c551ac1ac475ef8e8e62c8545b0add",
+      "seat3": "9edbdeb6f794daff0452b9541baeea44e2c551ac1ac475ef8e8e62c8545b0add"
+    },
+    "presentation_cadence": {
+      "0": {
+        "samples": 299,
+        "mean_ms": 38.671,
+        "p95_ms": 59.336,
+        "max_ms": 135.359,
+        "gaps_over_33ms": 189
+      },
+      "1": {
+        "samples": 299,
+        "mean_ms": 38.69,
+        "p95_ms": 57.114,
+        "max_ms": 211.124,
+        "gaps_over_33ms": 176
+      },
+      "2": {
+        "samples": 299,
+        "mean_ms": 38.685,
+        "p95_ms": 61.746,
+        "max_ms": 242.467,
+        "gaps_over_33ms": 179
+      },
+      "3": {
+        "samples": 299,
+        "mean_ms": 38.701,
+        "p95_ms": 58.932,
+        "max_ms": 266.38,
+        "gaps_over_33ms": 176
+      }
+    },
+    "passed": true
+  },
+  "authoritative_no_rollback_single_guest_cut": {
+    "settings": {
+      "native": true,
+      "predictive": false,
+      "authoritative": true,
+      "launcher": false,
+      "executable": null,
+      "players": 4,
+      "fault": "network",
+      "frames": 300,
+      "at": 60,
+      "cut_seconds": 3.0,
+      "fault_seat": 1,
+      "delay_ms": 0,
+      "initial_state": null,
+      "inputs": null,
+      "timeout": 60.0
+    },
+    "elapsed": 10.56,
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 5771274,
+    "executable_sha256": "7818dd306d67cc59ba06c538728803ef29d92a41961e4d46b6fb48a9dde0df7e",
+    "host_ticks_during_cut": 60,
+    "healthy_ticks_during_cut": {
+      "2": 90,
+      "3": 90
+    },
+    "state_sha256": {
+      "seat0": "f69e3a161ac451f45d2e4a81f30f0f066190f5904a080e0730b48065d653b021",
+      "seat1": "f69e3a161ac451f45d2e4a81f30f0f066190f5904a080e0730b48065d653b021",
+      "seat2": "f69e3a161ac451f45d2e4a81f30f0f066190f5904a080e0730b48065d653b021",
+      "seat3": "f69e3a161ac451f45d2e4a81f30f0f066190f5904a080e0730b48065d653b021"
+    },
+    "passed": true
+  },
+  "authoritative_no_rollback_desync": {
+    "settings": {
+      "native": true,
+      "predictive": false,
+      "authoritative": true,
+      "launcher": false,
+      "executable": null,
+      "players": 4,
+      "fault": "desync",
+      "frames": 240,
+      "at": 60,
+      "cut_seconds": 12,
+      "fault_seat": null,
+      "delay_ms": 0,
+      "initial_state": null,
+      "inputs": null,
+      "timeout": 60.0
+    },
+    "elapsed": 6.92,
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 0,
+    "executable_sha256": "7818dd306d67cc59ba06c538728803ef29d92a41961e4d46b6fb48a9dde0df7e",
+    "host_ticks_during_cut": 0,
+    "healthy_ticks_during_cut": {},
+    "state_sha256": {
+      "seat0": "89136da820636c7c251aee98790600f6be00a40d05b60e93c24b28c2db308ce1",
+      "seat1": "89136da820636c7c251aee98790600f6be00a40d05b60e93c24b28c2db308ce1",
+      "seat2": "89136da820636c7c251aee98790600f6be00a40d05b60e93c24b28c2db308ce1",
+      "seat3": "89136da820636c7c251aee98790600f6be00a40d05b60e93c24b28c2db308ce1"
+    },
+    "passed": true
+  },
+  "legacy_after_fin_fix": {
+    "settings": {
+      "native": true,
+      "predictive": false,
+      "authoritative": false,
+      "launcher": false,
+      "executable": null,
+      "players": 2,
+      "fault": "none",
+      "frames": 120,
+      "at": 60,
+      "cut_seconds": 12,
+      "fault_seat": null,
+      "delay_ms": 0,
+      "initial_state": null,
+      "inputs": null,
+      "timeout": 60.0
+    },
+    "elapsed": 6.51,
+    "exit_codes": [
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 0,
+    "executable_sha256": "5778dd25d9312201fa352c1cf326ec10940d348b3e267af34eaa2740a68b5b01",
+    "host_ticks_during_cut": 0,
+    "healthy_ticks_during_cut": {},
+    "state_sha256": {
+      "seat0": "1f5d1d2b2e3001643600141e93a8186cbb216a711b735a6a51d9a822a4981be5",
+      "seat1": "1f5d1d2b2e3001643600141e93a8186cbb216a711b735a6a51d9a822a4981be5"
+    },
+    "presentation_cadence": {
+      "0": {
+        "samples": 119,
+        "mean_ms": 48.386,
+        "p95_ms": 71.691,
+        "max_ms": 79.793,
+        "gaps_over_33ms": 103
+      },
+      "1": {
+        "samples": 119,
+        "mean_ms": 48.381,
+        "p95_ms": 70.739,
+        "max_ms": 79.654,
+        "gaps_over_33ms": 102
+      }
+    },
+    "passed": true
+  },
+  "fluency_qualification": {
+    "qualified": false,
+    "reason": "Four local native peers with 50 ms proxy delay still averaged about 39 ms between presented frames; state equality does not establish fluency.",
+    "scope": "Headless boot/menu only; no real WAN combat qualification."
+  },
+  "story_restore_cost": {
+    "frames": 120,
+    "players": 3,
+    "restore_mean_ms": 57.321,
+    "restore_p95_ms": 75.944,
+    "serialize_mean_ms": 3.247,
+    "probe_digest_mean_ms": 2.575
   }
 }
