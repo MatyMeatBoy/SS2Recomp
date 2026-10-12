@@ -1,80 +1,74 @@
-# Recuperación automática — v0.2.2 (experimental)
+# Automatic room recovery — v0.2.2 (experimental)
 
-En Windows, `--netplay-safe` con direcciones directas activa TCP recuperable
-para 2–4 jugadores. El UDP de recomp-net permanece disponible iniciando el
-juego normalmente. Las salas con relay/Discord conservan el transporte previo:
-esta recuperación no se aplica a ese servicio.
+On Windows, `--netplay-safe` with direct addresses selects recoverable TCP for
+2–4 players. Ordinary recomp-net UDP/Discord/relay sessions use a separate
+transport and do not inherit this recovery protocol.
 
-## Inicio
+## Starting a room
 
-1. Ejecuta `build/ShiningSoul2Recomp.exe` y selecciona tu ROM y BIOS propios.
-2. Abre **Netplay (experimental)**. El host selecciona **Anfitrión** y crea sala;
-   cada invitado introduce su IP de Hamachi y elige un asiento diferente.
-3. Selecciona 2–4 participantes; todos deben indicar la misma cantidad, puerto
-   TCP (19740 por defecto) e ID de sala (24683 por defecto).
-4. Usa el mismo ID en todos. Una sesión nueva inicia otra partida;
-   reutilizar la sesión existente recupera su último estado confirmado.
+1. Open `build/ShiningSoul2Recomp.exe` and select your own ROM and BIOS.
+2. Select **Netplay (experimental)**. One participant creates the room as host;
+   guests choose distinct seats and enter its reachable IPv4 or DNS address.
+3. Everyone must use the same player count, TCP port (19740 by default), room
+   ID (24683 by default), build and assets.
+4. A new room ID starts a fresh session. Retain the existing room directory and
+   credentials to recover its last confirmed state.
 
-Hamachi es opcional: sirve una LAN o VPN que permita TCP entre los PCs. Si usas
-IP pública, hace falta encaminamiento y permiso de firewall para el puerto TCP.
-El diseño está destinado a participantes conocidos en LAN/VPN; no incorpora
-TLS ni autorización de la primera entrada mediante un servicio público.
+Hamachi is optional; a reachable LAN or VPN is sufficient. Public-IP hosting
+requires routing and firewall access to the TCP port. The protocol is intended
+for known LAN/VPN participants; it does not provide TLS or public-service
+first-join authorization.
 
-## Qué recupera
+## Recovery behavior
 
-- Un corte de Wi-Fi: espera, reconecta cada segundo y reinstala el estado común.
-- Reinicio de un invitado: conserva su credencial local de asiento y recibe el
-  estado del host; sus saves individuales antiguos no reemplazan la partida.
-- Reinicio del host: recupera su checkpoint y reproduce el diario de controles
-  confirmados, verificando cada digest, antes de reunir otra vez a los invitados.
-- Crash de Windows del ejecutable: el launcher inicia un supervisor interno que lo relanza.
-  Un cierre normal o un error de validación no provoca un bucle de reinicios.
-- Divergencia transitoria: vuelve al estado confirmado del host y espera una
-  barrera de digests iguales. Tres reparaciones fallidas en el mismo tick
-  detienen la sesión con error en vez de avanzar con estados distintos.
+- Wi-Fi interruption: wait, retry every second, restore the common state.
+- Guest restart: retain the local seat credential and receive the host state;
+  an old independent battery save does not replace an established session.
+- Host restart: restore the checkpoint and replay verified journal inputs.
+- Windows crash: the integrated supervisor restarts the worker. Normal exit or
+  validation errors do not cause a restart loop.
+- Transient divergence: restore the host's confirmed state and require matching
+  digests before continuing. Repeated failed repairs stop with an explicit error.
 
-El juego puede pausarse durante cortes y confirmaciones. No se promete ausencia
-de lag ni rollback imperceptible. Todos siguen ejecutando todas las consolas
-con su cable; la red controla la admisión de ticks, no enchufa/desenchufa el cable
-in-game. Se descarta como máximo la transición tentativa todavía no confirmada.
+All consoles stay connected internally. Network admission controls frame
+progress, rather than disconnecting the in-game cable. The current protocol
+waits for every input and state digest, so it can pause or slow with latency.
+It does not promise zero lag or imperceptible rollback. Prediction/pipelining
+is under development and has not replaced this confirmed-frame profile.
 
-## Estado duradero y autoridad
+## Durable authority
 
-La autoridad es el host original. Cada transición usa controles de todos los
-asientos; todos ejecutan el frame y envían el digest de su estado completo.
-El host publica COMMIT sólo después de digests iguales y de escribir el registro
-correspondiente con flush de disco. Cada 120 ticks reemplaza atómicamente el
-checkpoint de todas las consolas y cable; el diario permite reconstruir los
-frames posteriores. Una escritura final incompleta se descarta; corrupción de
-registros completos, imágenes o identidad de build produce un error explícito.
+The original host is authoritative. It emits COMMIT only after matching full
+state digests and flushing the corresponding journal record to disk. Every
+120 ticks it atomically replaces the complete consoles-and-cable checkpoint.
+Journal replay reconstructs subsequent frames and verifies every state hash.
+An interrupted partial final record is discarded; corrupt complete records,
+checkpoints or build identities produce explicit errors.
 
-La recuperación conserva la sala, imágenes verificadas, configuración de
-consolas y generación de conexión. Los paquetes de una generación anterior
-no pueden convertirse en controles nuevos. La credencial privada de un asiento
-impide que otro proceso lo suplante tras su primera entrada; no debe compartirse.
-Los archivos quedan en `build/netplay/recovery/room-ID/seat-N` y no se distribuyen
-ni se suben al repositorio. Mantén esa carpeta para recuperar la sesión.
+Connection generations prevent old packets becoming new inputs. A private seat
+credential protects an occupied seat after its first join; do not share it.
+Local files live in `build/netplay/recovery/room-ID/seat-N` and stay out of releases.
+The original host must return with those files and a reachable address. There
+is no automatic host migration or fixed-IP rediscovery. DNS is resolved again
+when reconnecting. Different builds, ROMs, BIOS files or mappings are rejected.
 
-## Límites
+## Evidence and remaining work
 
-El host debe volver en el mismo PC, con sus archivos y una dirección alcanzable.
-No hay migración automática a otro PC ni descubrimiento de una nueva IP fija.
-Si se usa un nombre DNS, se resuelve otra vez al reconectar. Todos necesitan la
-misma build, ROM y BIOS; la aplicación rechaza snapshots de otra identidad.
-La igualdad de estados con este protocolo no demuestra gameplay sin bugs ni
-rendimiento adecuado entre casas. Las pruebas de juego actuales usan selección
-de clases y arranque; falta combate prolongado y una prueba real por Hamachi.
+Local tests covered host/guest restarts, transient divergence, a 65-second cut,
+and the integrated crash supervisor. They covered boot and distinct inputs
+at class selection, not sustained linked combat or separate-home Hamachi play.
+Equal states establish synchronization for those tests, not whole-game correctness
+or acceptable sustained performance. [Detailed evidence](NETPLAY_VALIDATION.md).
 
-## Fronteras para una futura decomp
+## Future decompilation integration
 
-`src/ss2_recovery.h` separa transporte/persistencia de la simulación mediante
-capture, restore, advance y controles por tick. El adaptador GBA está en
-`src/ss2_recovery_runner.cpp`. Una decomp puede cambiar ese adaptador conservando
-las barreras, autoridad e identidad; no se promete compatibilidad de snapshots.
-Widescreen, LUT de color, ventanas y sonido local quedan fuera de la autoridad.
+`src/ss2_recovery.h` separates capture, restore, advance and per-tick input from
+transport/persistence. `src/ss2_recovery_runner.cpp` adapts the linked GBA world.
+A decompilation can replace the adapter while preserving authority and identity;
+snapshot compatibility is not promised. Widescreen, color LUTs and local audio
+are presentation state rather than simulation authority.
 
-Referencias: [Mario Kart Recomp](https://github.com/mstan/MarioKartSuperCircuitRecomp/releases),
-[psxrecomp](https://github.com/RetroPortingToolKit/psxrecomp/blob/master/docs/NETPLAY.md)
-y [GGPO API](https://github.com/pond3r/ggpo/blob/master/src/include/ggponet.h).
-Se usaron para separar admisión, estado y liveness; el protocolo TCP de esta
-release es propio y no reemplaza el modo UDP/rollback experimental.
+References: [Mario Kart Recomp](https://github.com/mstan/MarioKartSuperCircuitRecomp/releases),
+[psxrecomp](https://github.com/RetroPortingToolKit/psxrecomp/blob/master/docs/NETPLAY.md),
+and [GGPO API](https://github.com/pond3r/ggpo/blob/master/src/include/ggponet.h).
+This release uses a project-specific TCP recovery protocol, separate from UDP rollback.

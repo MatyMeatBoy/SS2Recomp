@@ -1,43 +1,36 @@
-# Widescreen: comprobación del estado 4 (2026-10-11)
+# Widescreen state-4 validation — 2026-10-11
 
-El ejecutable actualizado está en `build/ShiningSoul2Recomp.exe`.
-El BAT de la raíz sigue abriendo ese ejecutable. El mod se activa por defecto
-para instalaciones nuevas y comienza en 284x160, la aproximación con píxeles
-enteros a 16:9 con 160 líneas. En pantalla completa adapta el ancho al monitor.
+Launch `build/ShiningSoul2Recomp.exe` or the root BAT. Fresh installations enable
+adaptive view at 284×160, preserving 160 vertical pixels; fullscreen adapts to
+the monitor. Menus and unsupported cinematics remain centered.
 
-## Causa y corrección
+## Original fix
 
-El proveedor aceptaba solamente mapas descomprimidos en EWRAM. El castillo del
-estado 4 usa mapas sin comprimir en ROM. Además, faltaba declarar
-`RunOptions::max_view_width`, necesario para vistas anchas fijas/headless.
+The provider initially accepted only decompressed EWRAM maps. State 4's castle
+uses uncompressed ROM maps. `RunOptions::max_view_width` also had to be declared
+for fixed/headless expansion. The IWRAM descriptors at `0x03003188`, stride 24,
+contain these maps:
 
-Las descripciones IWRAM en 0x03003188, con stride 24, contienen estos mapas:
-
-| Capa | Dirección ROM | Tamaño | Cámara comprobada |
+| Layer | ROM address | Tiles | Verified camera |
 | --- | --- | --- | --- |
-| BG1 | 0x08634B18 | 90x40 tiles | (239,33) |
-| BG2 | 0x08632EF8 | 90x40 tiles | (239,33) |
-| BG3 | 0x086312D8 | 90x40 tiles | (239,33) |
+| BG1 | `0x08634B18` | 90×40 | (239,33) |
+| BG2 | `0x08632EF8` | 90×40 | (239,33) |
+| BG3 | `0x086312D8` | 90×40 | (239,33) |
 
-Cada mapa coincidió con 49/49 muestras distribuidas del anillo VRAM visible.
-El proveedor valida alineación, dimensiones y límites antes de leer RAM/ROM.
-No altera el estado del juego; los laterales usan datos del mapa original.
-La caché de escena se invalida al comenzar cada frame, también tras restaurar
-estados. Los paneles del HUD conservan su tamaño y se anclan a los bordes.
+Each matched 49/49 distributed visible-ring probes. Reads validate alignment,
+dimensions and bounds. The scene cache resets at frame boundaries and restores;
+HUD panels keep their native size and attach to the expanded edges.
 
-## Pruebas reproducibles
+## Reproduction
 
-- `py -3.12 re/ws4_probe.py`: carga el estado mediante TCP y guarda volcados.
-- `py -3.12 re/test_widescreen.py`: pruebas sin ventana ni sonido, guardados
-  separados en `re/run`. Mantiene izquierda/derecha durante 180 frames desde
-  el estado 4; carga también los estados 1, 2 y 3 durante 120 frames cada uno.
-- Estado 4 inmóvil: 120 frames. Lanzamiento desde la raíz: 30 frames.
-- Todas estas ejecuciones finalizaron con FULLY_STATIC y cero dispatch misses.
-- Capturas `re/run/ws4-after.png`, `ws-left.png` y `ws-right.png` revisadas:
-  escenario adicional real y desplazamiento de cámara en ambos sentidos.
+`re/ws4_probe.py` loads the user's state via TCP and dumps memory.
+`re/test_widescreen.py` runs muted/windowless left/right inputs for 180 frames
+from state 4 and states 1–3 for 120 frames each, using separate saves. Stationary
+state 4 (120 frames) and root launch (30 frames) were also checked. Those runs
+reported FULLY_STATIC and zero dispatch misses. Captures were inspected for real
+map content and camera movement. These are route-specific, not whole-game or
+multiplayer coverage. Map boundaries do not invent terrain. Game-side actor
+spawn/culling expansion remains separate work.
 
-Esto no prueba todo el juego ni una partida de red. Menús/cinemáticas sin un
-mapa de campo reconocido siguen centrados con márgenes; no se repite ni estira
-el arte para rellenarlos. Los límites físicos del mapa tampoco inventan
-terreno adicional. La ampliación de la aparición de actores fuera del área
-nativa todavía necesita análisis del código de culling del juego.
+See [the newer scene-transition fix](../docs/SCENE_TRANSITIONS.md) for window
+masking, right-margin OBJ placement and 720-frame deterministic comparisons.

@@ -10,148 +10,104 @@
   <a href="https://github.com/MatyMeatBoy/SS2Recomp/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-586069?style=flat-square" alt="MIT license"></a>
 </p>
 
-Recompilación estática de **Shining Soul II (Europe, AU2P)** basada en
-gbarecomp. Incluye vista adaptativa 16:9 con datos reales del mapa, soporte de
-multijugador por cable emulado para 2 a 4 jugadores y la infraestructura de
-salas/netplay de recomp-ui.
+A static recompilation of **Shining Soul II (Europe, AU2P)** built on
+gbarecomp, with adaptive widescreen and linked GBA multiplayer for 2–4 players.
 
-## Estado actual
+## Project status
 
-| Área | Estado |
+| Feature | Status |
 | --- | --- |
-| Recompilación estática | Verificada en los recorridos cubiertos |
-| Widescreen adaptativo | Campo 16:9 con mapa real a ambos lados |
-| Netplay 2 jugadores | Integrado |
-| Netplay 3–4 jugadores | Integrado; delay-sync recomendado |
-| Rollback 4 jugadores | Experimental, probado con red degradada |
-| Release Windows x64 | [v0.2.2](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.2) |
+| Static guest execution | Verified on documented test routes; whole-game coverage is not claimed |
+| Adaptive widescreen | Real authored field maps, starting at 284×160; no stretching |
+| Map transitions | Local development build fixes scenery leaking through side margins during scene changes |
+| Sprite placement | Local development build preserves right-margin coordinates across X=255/256 |
+| Recoverable LAN netplay | Experimental, 2–4 players; can wait for network confirmations |
+| Discord-linked lobby / ICE | Two local processes tested through the real lobby; external-home gameplay remains unverified |
+| Predictive recoverable netplay | Work in progress; not enabled or qualified yet |
+| Published Windows release | [v0.2.2](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.2) |
 
-La prioridad de esta etapa es ampliar las pruebas entre PCs reales, cubrir más
-escenas del juego y validar reconexión durante una partida prolongada.
+See [architecture](docs/ARCHITECTURE.md), [network validation](docs/NETPLAY_VALIDATION.md),
+and [scene-transition validation](docs/SCENE_TRANSITIONS.md). Development fixes
+listed above are newer than the published v0.2.2 package.
 
-La arquitectura está explicada en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-Consulta también la [matriz de pruebas y límites del online](docs/NETPLAY_VALIDATION.md).
+## Windows quick start
 
-El proyecto no incluye ROM, BIOS, partidas, estados ni código generado. Cada
-usuario debe aportar legalmente su propia copia de la ROM y su propio dump de
-BIOS.
+1. Download and extract the complete release ZIP, preserving `build` and `tools`.
+2. Open `build/ShiningSoul2Recomp.exe`, or the included `Jugar ShiningSoul2Recomp.bat`.
+3. Select your own ROM and BIOS in the launcher.
+4. Use the Mods tab to enable adaptive widescreen. It starts at 284×160 and adapts
+   to the display in fullscreen. Menus and unsupported scenes retain native composition.
 
-## Instalación rápida en Windows
+Required assets:
 
-1. Descarga y extrae todo el ZIP, conservando las carpetas `build` y `tools`.
-2. Ejecuta el programa. El launcher permite seleccionar la ROM y el BIOS.
-   También puedes colocarlos localmente según `game.toml`:
-   `roms/shining_soul_2_europe.gba` y `gbarecomp/bios/gba_bios.bin`.
-3. El BIOS debe ser un dump propio de 16 KiB con SHA-1
-   `300c20df6731a33952ded8c436f7f186d25d3492`.
-4. La ROM compatible es Shining Soul II Europe AU2P, SHA-1
-   `aa1288be9257337abdfe3034898cf6c7aa778fbc`.
+| Asset | Expected SHA-1 |
+| --- | --- |
+| Shining Soul II Europe, AU2P | `aa1288be9257337abdfe3034898cf6c7aa778fbc` |
+| Original 16 KiB GBA BIOS dump | `300c20df6731a33952ded8c436f7f186d25d3492` |
 
-El archivo `Jugar ShiningSoul2Recomp.bat` abre el ejecutable. La vista de campo
-empieza en 284x160, que conserva los 160 píxeles verticales y usa el ancho
-lógico aproximado de 16:9. En pantalla completa se adapta al monitor. El mapa
-original se consulta desde EWRAM o ROM; no se repiten tiles ni se estiran
-personajes. Los menús, diálogos y escenas sin un mapa de campo reconocido
-conservan composición nativa centrada.
+The repository and releases do not include ROMs, BIOS dumps, saves, save states,
+or ROM-derived generated code. Supply your own compatible files. Source builds
+also recognize `roms/shining_soul_2_europe.gba` and `gbarecomp/bios/gba_bios.bin`.
 
-## Multijugador
+## Multiplayer
 
-El perfil recomendado de esta versión es el botón **Netplay (experimental)**:
-TCP directo con recuperación automática para 2–4 jugadores. Se verificaron
-cortes de 65 segundos, reinicio del host, del invitado y divergencia transitoria
-en pruebas locales. [Configuración y límites](docs/NETPLAY_RECOVERY.md).
+**Netplay (experimental)** is the integrated direct-TCP recovery profile. Choose
+2–4 participants and one host. Guests select distinct seats and enter the host's
+reachable LAN or VPN address, the same TCP port (19740 by default), and room ID
+(24683 by default). Two instances on one PC can use `127.0.0.1`.
 
-Los ejemplos siguientes describen el transporte UDP anterior, todavía disponible.
+Hamachi is optional: any reachable LAN/VPN works. Tests on one PC do not prove
+performance between homes. Each PC simulates every linked console internally;
+owner saves are exchanged at startup. The current recovery profile waits for
+confirmed inputs and matching state digests, so network latency can reduce
+forward progress. Prediction and pipelined input delivery are under development.
 
-Cada proceso simula todas las consolas de la sesión y comparte las entradas,
-snapshots y el estado de sincronización. El asiento 0 actúa como hub directo para tres o
-cuatro jugadores; con dos jugadores se usa el enlace par a par. Para internet
-se puede usar Hamachi, Tailscale o una red con puertos UDP accesibles. La
-base admite lobby y relay; su funcionamiento en una sesión pública de este
-proyecto todavía requiere validación. Hamachi y Tailscale no se han probado
-entre PCs en esta revisión.
+The original host owns the recovery checkpoint and input journal. Keep the room
+folder to resume after a crash or connection loss. The original host must return;
+there is no automatic migration to another PC. See [recovery design and setup](docs/NETPLAY_RECOVERY.md).
 
-Ejemplo del host, con cuatro jugadores:
+The ordinary **Netplay** button uses recomp-net, with lobby/ICE and direct UDP
+paths. Recovery from the experimental TCP profile does not automatically apply
+to that transport. Rollback is experimental: stress tests detected checkpoint
+mismatches, while delay-sync agreed on the final state. Neither transport has
+been qualified for sustained linked combat between separate homes.
+
+Four-player direct UDP examples:
 
 ```text
 ShiningSoul2Recomp.exe --netplay-players 4 --netplay-seat 0 --netplay-session 41011 --netplay-bind 0.0.0.0:21940 --netplay-delay-sync
+ShiningSoul2Recomp.exe --netplay-players 4 --netplay-seat 1 --netplay-session 41011 --netplay-bind 0.0.0.0:21941 --netplay-peer HOST_IP:21940 --netplay-delay-sync
 ```
 
-Ejemplo de un cliente:
+Each additional guest needs its own seat and local port. Use
+`--netplay-rollback` to explicitly select rollback. Three- and four-player
+sessions default to delay-sync. Paired checkpoints require compatible assets,
+build identities and all participants; do not mix independent save states.
 
-```text
-ShiningSoul2Recomp.exe --netplay-players 4 --netplay-seat 1 --netplay-session 41011 --netplay-bind 0.0.0.0:21941 --netplay-peer IP_DEL_HOST:21940 --netplay-delay-sync
+## Building and testing
+
+Use CMake, a MinGW compiler with SDL2, and Python 3.12 for qualification scripts.
+Initialize submodules and run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/prepare_gbarecomp.ps1
+powershell -ExecutionPolicy Bypass -File tools/regen.ps1
+powershell -ExecutionPolicy Bypass -File tools/regen_bios.ps1
 ```
 
-Para usar rollback sustituye `--netplay-delay-sync` por
-`--netplay-rollback`. Con 3 o 4 jugadores el modo de retraso es el
-predeterminado; rollback queda disponible de forma explícita.
+The preparation script pins the tested recomp-net revision and applies the
+tracked framework patches. Configure CMake for the local toolchain, then build
+with `-j1` on memory-constrained systems. Never edit `generated/` manually.
+Check coverage reports instead of assuming every route is fully static.
 
-Las partidas enlazadas usan checkpoints emparejados. Al guardar y salir, todos
-los participantes deben conservar el archivo `.paired` para poder reanudar la
-misma sesión.
+Scene qualification is documented in [docs/SCENE_TRANSITIONS.md](docs/SCENE_TRANSITIONS.md).
+Muted tests use isolated saves and hidden/windowless instances. Network logs and
+private room credentials stay under ignored local directories.
 
-## Pruebas reproducibles
+## Credits and licensing
 
-Las pruebas locales no usan sonido y no modifican las partidas del usuario:
-
-```text
-py -3.12 re/test_widescreen.py
-py -3.12 re/test_netplay_local.py --mode delay-sync --frames 240 --latency-ms 45 --jitter-ms 15 --loss 0.015
-py -3.12 re/test_netplay_local.py --mode rollback --frames 240 --latency-ms 45 --jitter-ms 15 --loss 0.015
-```
-
-Las pruebas completadas antes de esta release ejecutaron cuatro procesos,
-240 ticks y pérdida simulada; ambos modos produjeron checkpoints con SHA-256
-idéntico en los cuatro asientos. La cobertura de ejecución fue `FULLY_STATIC`,
-con cero instrucciones interpretadas y cero dispatch misses en los recorridos
-verificados.
-
-Estas pruebas validan el transporte y la determinación de la sesión. No
-sustituyen una partida prolongada entre cuatro PCs reales ni certifican todos
-los routers, VPN o proveedores de internet.
-
-La revisión posterior amplió las pruebas a 2, 3 y 4 procesos y corrigió la
-instalación del dispatcher Flash en cada consola. Las pruebas usan entradas
-neutras y reportaron cero ticks de replay, por lo que aún no validan
-correcciones de rollback durante gameplay. Un corte de red de dos segundos
-impidió completar una prueba de cuatro jugadores dentro de 60 segundos;
-ese resultado corresponde al transporte UDP anterior. El nuevo perfil TCP
-recuperable pasó los escenarios documentados en la matriz enlazada arriba.
-
-Las pruebas posteriores con controles distintos observaron un tick de rollback
-corregido por proceso en loopback. Bajo estrés mayor, rollback rechazó un
-checkpoint por divergencia; delay-sync sí acordó estados idénticos. Por ahora
-se mantiene el estado experimental. Estos controles se probaron en la selección
-de clases, y todavía falta verificar combate enlazado.
-
-## Compilación
-
-Se requiere CMake, un compilador MinGW compatible con SDL2 y Python 3.12 para
-las pruebas. `tools/regen.ps1` regenera el código desde una ROM verificada y
-`tools/regen_bios.ps1` regenera la parte del BIOS desde el dump local. Nunca se
-edita `generated/` a mano. Antes de configurar una copia recién clonada,
-ejecuta `powershell -ExecutionPolicy Bypass -File tools/prepare_gbarecomp.ps1`
-para fijar la versión de recomp-net usada por esta release.
-
-### Online recuperable (Windows, experimental)
-
-El botón **Netplay (experimental)** conecta por TCP directo con recuperación
-automática de cortes y reentrada de procesos. El host conserva un checkpoint y
-un diario de controles confirmados; un supervisor interno recupera crashes de Windows.
-Compatible con 2–4 participantes en LAN o VPN/Hamachi. Puede pausar durante la
-espera; el host original debe volver. El modo UDP/rollback y el relay anterior
-siguen disponibles, con sus límites de validación.
-
-[Inicio, diseño y límites](docs/NETPLAY_RECOVERY.md) ·
-[Pruebas y evidencia](docs/NETPLAY_VALIDATION.md).
-
-Para reconstruir, ejecuta `tools/prepare_gbarecomp.ps1` tras inicializar los
-submódulos: aplica los parches de runtime usados por este proyecto.
-
-## Créditos y licencia
-
-El proyecto de aplicación se publica bajo MIT. gbarecomp, recomp-ui,
-recomp-net y sus dependencias mantienen sus propias licencias y avisos. Shining
-Soul II y su contenido pertenecen a sus respectivos titulares; este repositorio
-no distribuye material de Nintendo.
+Built on [gbarecomp](https://github.com/mstan/gbarecomp),
+[recomp-ui](https://github.com/mstan/recomp-ui), and recomp-net. Game-specific
+research also uses [SS2Decomp](https://github.com/MatyMeatBoy/SS2Decomp).
+The application code is MIT-licensed; dependencies retain their own licenses.
+Shining Soul II and its assets belong to their respective rights holders.

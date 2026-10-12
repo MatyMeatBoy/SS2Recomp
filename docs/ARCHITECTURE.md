@@ -1,55 +1,44 @@
-# Arquitectura
+# Architecture
 
-ShiningSoul2Recomp separa el comportamiento del juego de las mejoras de
-presentación y del transporte de red.
+ShiningSoul2Recomp separates deterministic guest behavior from presentation and networking.
 
 ```text
-ROM + BIOS propios
-        │
-        ▼
- gba_recompile ──► generated/ ──► ShiningSoul2Recomp.exe
-        │                              │
-        │                              ├─ PPU nativo 240x160
-        │                              ├─ vista adaptativa 16:9
-        │                              └─ launcher recomp-ui
-        │
-        └────────────► runtime GBA + link-cable session
-                                      │
-                         ┌────────────┴────────────┐
-                         ▼                         ▼
-                    delay-sync                  rollback
-                         │                         │
-                         └──── inputs + snapshots ─┘
+User ROM + BIOS -> gba_recompile -> generated/ -> ShiningSoul2Recomp.exe
+                                                   | native 240x160 PPU
+                                                   | adaptive widescreen
+                                                   | recomp-ui launcher
+                                                   | linked GBA session
+                                                   + inputs / snapshots / confirmations
 ```
 
-## Vista adaptativa
+## Adaptive presentation
 
-El juego sigue simulando el hardware GBA a 240x160. Cuando la ventana tiene
-espacio adicional, `src/ss2_extended_view.cpp` traduce las columnas laterales
-del renderizado a los mapas authored del juego. La escena del estado 4 usa
-tres mapas de 90x40 tiles referenciados desde ROM; el proveedor valida sus
-dimensiones, límites y coincidencia con el anillo VRAM antes de dibujarlos.
+`src/ss2_extended_view.cpp` supplies real authored tilemap entries for expanded
+columns. The castle fixture uses three 90x40 ROM maps. Providers validate
+alignment, bounds, dimensions, scroll registers and the visible VRAM ring.
+HUD panels retain their native size and move to the edges. Unsupported menus
+and cinematics remain centered. [Transition policy and tests](SCENE_TRANSITIONS.md).
 
-El HUD se conserva en tamaño nativo y sus paneles se anclan a los bordes. Los
-menús y las cinemáticas sin un mapa compatible se mantienen centrados para no
-inventar contenido.
+## Network execution
 
-## Netplay
+Every peer simulates all 2–4 consoles on one local virtual cable. Only inputs,
+state snapshots, confirmations and control messages travel over the network;
+video is rendered locally. Session identity includes ROM, BIOS, build, save
+hardware and seat mapping. Each owner's battery save is installed at startup.
 
-Cada participante simula todas las máquinas del cable. La red intercambia
-entradas, confirmaciones, snapshots y mensajes de control; no transmite
-frames de vídeo. La identidad de la sesión incluye ROM, BIOS, build, hardware
-de guardado y asignación de puertos.
+The ordinary recomp-net path supports delay-sync and rollback. Delay-sync is
+the default for 3–4 players. Rollback remains experimental because stress tests
+detected checkpoint mismatches. Confirmed paired saves require a shared tick.
 
-Con dos jugadores se puede usar rollback o delay-sync. Con tres y cuatro el
-modo recomendado es delay-sync porque limita el coste de resimulación; rollback
-está disponible para pruebas y sesiones experimentales. Los checkpoints
-emparejados se escriben solamente cuando todos los asientos confirman el mismo
-tick.
+The experimental Windows TCP profile adds durable checkpoints, an input journal,
+seat credentials, reconnect and a crash supervisor. Its current confirmed-frame
+barrier can slow forward progress with latency. Pipelined input delivery and a
+bounded prediction timeline are work in progress and are not enabled yet.
+See [recovery](NETPLAY_RECOVERY.md) and [qualification limits](NETPLAY_VALIDATION.md).
 
-## Código generado y trazabilidad
+## Source provenance
 
-El contenido de `generated/` se produce localmente desde la ROM verificada y no
-se versiona. Las correcciones de runtime viven en el submódulo gbarecomp o en
-los archivos de integración del juego. Los scripts bajo `re/` reproducen las
-pruebas de vista y transporte sin sonido y con partidas separadas.
+Generated guest code comes from the user's verified ROM and is not tracked.
+Framework integration changes are reproduced by `tools/prepare_gbarecomp.ps1`
+using the checked-in patches. Never edit generated C++ as a bug fix.
+Scripts in `re/` use muted, isolated fixtures; private artifacts remain ignored.

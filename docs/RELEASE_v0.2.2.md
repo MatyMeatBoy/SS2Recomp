@@ -1,46 +1,41 @@
-# v0.2.2 — Salas experimentales y conexiones ICE
+# v0.2.2 — Experimental rooms and ICE connections
 
-Crear una sala experimental con un puerto ocupado cerraba el launcher y el
-error quedaba en un registro oculto. Ahora se comprueba el puerto antes de salir
-del formulario: puedes cambiarlo y reintentar allí mismo. Los fallos posteriores
-del supervisor muestran un aviso con los registros.
+Creating an experimental room on an occupied port previously closed the launcher
+and left the error in a hidden log. Port availability is now checked before
+leaving the form, so users can change it and retry. Later supervisor failures
+show an error dialog with the log location.
 
 ## LAN / Hamachi
 
-Abre `build/ShiningSoul2Recomp.exe` y **Netplay (experimental)**. El anfitrión
-selecciona 2–4 jugadores y crea la sala. Cada invitado usa otro asiento, la misma
-sala y puerto, y la IPv4 de Hamachi del anfitrión. Para dos instancias en un mismo
-PC, crea solamente un anfitrión; la segunda debe entrar como invitado a
-`127.0.0.1`. Si el puerto está ocupado o reservado, elige otro y comunícalo a todos.
+Open `build/ShiningSoul2Recomp.exe` and **Netplay (experimental)**. The host
+selects 2–4 players and creates the room. Guests choose different seats and use
+the same room/port plus the host's reachable Hamachi IPv4. Two instances on one
+PC use one host and one guest connecting to `127.0.0.1`. Choose another shared
+port if the default is occupied or reserved.
 
-La sala inicial cambia a **24683** para separar los archivos de recuperación de
-la versión anterior. Conserva los archivos antiguos: esta versión no borra ni
-convierte partidas de otra identidad de compilación.
+The initial room ID is now **24683**, separating recovery files from the previous
+build. Keep old files: this version neither deletes nor converts states from
+another build identity. Waiting/reconnecting shows an in-game panel, including
+fullscreen. TCP still uses confirmed inputs and can pause while a participant
+is missing. There is no promise of zero latency, invisible rollback or host migration.
 
-La espera de jugadores y la reconexión muestran un panel en el juego, incluso
-en pantalla completa. El perfil sigue siendo TCP con controles confirmados:
-pausa mientras falta un participante, conserva checkpoints y admite reentrada.
-No promete ausencia de latencia, rollback imperceptible ni migración del host.
+## Discord-linked / recomp-net rooms
 
-## Salas de Discord / recomp-net
+Static libjuice is enabled, and connected lobby ICE agents are transferred into
+the GBA session. Previously the runner attempted conventional UDP endpoints
+without adopting the transport selected by the launcher. Agents are now retained
+until the runner takes ownership, seat mappings are validated, and failed starts
+release their resources.
 
-Se habilita libjuice estático y se incorpora el traspaso de los agentes ICE
-conectados del lobby a la sesión GBA. Antes, el motor intentaba abrir UDP por
-direcciones convencionales sin adoptar el transporte indicado por el launcher.
-Ahora conserva los agentes hasta que el motor los recibe, valida los asientos y
-libera los recursos si no se puede iniciar la sesión.
+## Validation
 
-## Validación
+- Two experimental launcher instances: 90 ticks, clean exit, identical final states.
+- Four experimental launcher instances: 120 ticks, three-second network cut,
+  successful recovery and identical final states.
+- Occupied port: visible form error; launcher stays open.
+- ICE library: three sessions adopt lobby agents and route guest datagrams via host.
+- Real online lobby: two instances on one PC, stored login, ICE, 16:9 and identical
+  confirmed checkpoints at tick 120.
 
-- Dos instancias desde el launcher experimental: 90 ticks, cierre correcto y
-  estados finales idénticos.
-- Cuatro instancias desde el launcher experimental: 120 ticks, corte de red de
-  tres segundos y recuperación con estados finales idénticos.
-- Puerto ocupado: error visible en el formulario; el launcher permanece abierto.
-- Prueba de biblioteca ICE: tres sesiones adoptan las conexiones de la sala y
-  los invitados intercambian datagramas a través del host.
-- Lobby online real: dos instancias en el mismo PC, login almacenado, conexión
-  ICE, vista 16:9 y checkpoint confirmado idéntico en tick 120.
-
-Estas pruebas breves no equivalen a una sesión larga de combate entre países.
-ROM, BIOS, partidas, credenciales y registros privados no forman parte del ZIP.
+These short local tests do not qualify sustained combat between countries.
+ROMs, BIOS dumps, saves, credentials and private logs are excluded from the ZIP.

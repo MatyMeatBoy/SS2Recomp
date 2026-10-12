@@ -1,53 +1,31 @@
 # ShiningSoul2Recomp v0.1.1 — 2026-10-11
 
-Release visual y de netplay para Shining Soul II Europe AU2P.
+Historical visual/netplay release for Shining Soul II Europe AU2P.
 
-## Incluido
+## Included
 
-- Ejecutable Windows x64 recompilado estáticamente.
-- Launcher basado en recomp-ui para elegir ROM, BIOS, ajustes y mods.
-- Vista adaptativa 16:9 en escenas de campo, con mapa real a izquierda y
-  derecha del área GBA original.
-- HUD y paneles laterales reposicionados sin deformar sprites.
-- Compatibilidad de mapas tanto descomprimidos en EWRAM como referenciados
-  directamente desde ROM.
-- Netplay directo de 2, 3 y 4 jugadores sobre el cable emulado.
-- Modo delay-sync para sesiones grandes y modo rollback seleccionable.
-- Checkpoints emparejados para guardar y reanudar una sesión completa.
-- Validación de identidad de ROM, BIOS, compilación y configuración de cable.
-- Pruebas silenciosas reproducibles para vista, transporte, pérdida, jitter y
-  rollback.
-- Portada propia del launcher con identidad ShiningSoul2Recomp; se eliminaron
-  referencias visuales y textuales heredadas de otros proyectos.
+Windows x64 static recompilation, recomp-ui ROM/BIOS/settings launcher, adaptive
+16:9 authored field maps, repositioned native-size HUD, both EWRAM and ROM-backed
+maps, 2–4 linked-console direct netplay, selectable delay-sync/rollback, paired
+checkpoints, and ROM/BIOS/build/cable identity validation. Muted qualification
+scripts exercise presentation, transport, loss, jitter and rollback. Launcher
+branding removes inherited references to unrelated game projects.
 
-## Resultados de validación
+## Validation
 
-Se ejecutaron cuatro procesos independientes en loopback. Cada proceso simuló
-cuatro consolas y usó un asiento distinto. En delay-sync y rollback se probaron
-240 ticks con 45 ms de latencia, ±15 ms de jitter y 1,5 % de pérdida simulada.
-Los cuatro procesos terminaron correctamente y produjeron el mismo checkpoint
-emparejado, byte por byte.
+Four independent loopback processes each simulated four consoles using distinct
+seats. Delay-sync and rollback completed 240 ticks with 45 ms latency, ±15 ms
+jitter and 1.5% simulated loss, producing byte-identical paired checkpoints.
+The field fixture validated three 90×40 maps and a shared camera; left/right
+captures showed real additional content. Other documented state tests reported
+FULLY_STATIC with zero dispatch misses. This does not establish whole-game coverage.
 
-La prueba de vista cargó el savestate de una zona con escenario real fuera de
-los 240 píxeles nativos. El proveedor verificó tres mapas de 90x40 tiles y una
-cámara común; las capturas mostraron contenido distinto al desplazarse a la
-izquierda y a la derecha. Los estados de prueba adicionales también terminaron
-con `FULLY_STATIC` y cero dispatch misses.
+## Known limits
 
-## Limitaciones conocidas
-
-- El BIOS y la ROM deben ser proporcionados por cada usuario.
-- El netplay entre PCs reales todavía necesita una sesión externa prolongada;
-  la prueba publicada aquí es una simulación de red local con impedimentos.
-- Menús, diálogos y cinemáticas que no exponen un mapa de campo compatible se
-  muestran centrados dentro de la vista ancha.
-- La reconexión y el reanudar desde un checkpoint están implementados en la
-  infraestructura, pero requieren validación con una caída real durante una
-  partida de cuatro PCs.
-- El modo rollback de cuatro jugadores es experimental; delay-sync es el modo
-  recomendado para una primera sesión.
-
-## Instalación legal
-
-No se distribuyen ROM, BIOS, saves, savestates ni dumps derivados. Consulta
-`README.md` para hashes requeridos y la configuración de red.
+Each user supplies their own ROM and BIOS. Local impaired-network tests do not
+qualify prolonged external-PC gameplay. Unsupported menus/dialogs/cinematics
+retain native centered composition. Infrastructure supported reconnect/checkpoint
+resume, but a real mid-game four-PC outage remained unqualified in this release.
+Four-player rollback was experimental; delay-sync was recommended initially.
+No ROMs, BIOS dumps, saves, states or derived dumps are distributed.
+See README.md for assets and current setup; newer releases have additional fixes.

@@ -1,8 +1,8 @@
-# Portada del launcher
+# Launcher cover art
 
-Se utiliza la portada original de Shining Soul II indicada por el usuario:
+The launcher uses the original Shining Soul II cover requested by the user:
 https://s.pacn.ws/1/p/6/shining-soul-ii-3077.8.jpg?v=noqowl
 
-La imagen se convierte a TGA para el launcher, sin generar ni modificar su
-ilustración. Shining Soul II y su arte pertenecen a sus respectivos titulares.
-La licencia del código del proyecto no se aplica a esta portada.
+The image is converted to TGA without regenerating or changing its illustration.
+Shining Soul II and its artwork belong to their respective rights holders.
+The project's source-code license does not apply to this cover.
