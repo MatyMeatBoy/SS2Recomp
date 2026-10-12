@@ -1,4 +1,26 @@
-# Validación del netplay — 2026-10-11
+# Validación del netplay — 2026-10-12
+
+## v0.2.2: puertos y traspaso ICE
+
+Binario SHA-256 `45273e43495db77c31cd2e8706d1ce76274e4eb573f23071ff1fda702125741a`.
+
+| Ruta | Prueba | Resultado |
+| --- | --- | --- |
+| Experimental, 2 instancias | Launcher y supervisor, 90 ticks | Estados iguales; 8,81 s |
+| Experimental, 4 instancias | Corte TCP de 3 s, 120 ticks | Reconexión y estados iguales; 20,81 s |
+| Experimental, puerto ocupado | Intento de crear sala, captura del formulario | Error visible; launcher abierto hasta cancelar |
+| Online, 2 instancias | Lobby real protegido, login almacenado, ICE, 16:9 | 120 ticks; checkpoints idénticos; salida 0 en ambos |
+| Biblioteca ICE, 3 sesiones | Agentes de sala adoptados y tráfico entre invitados | PASS (`host_ice_test`) |
+
+La prueba online abre dos procesos en el mismo PC, crea y une una sala por el
+backend real del launcher, espera ICE, inicia las dos simulaciones y compara
+los checkpoints completos. Las credenciales ya estaban guardadas; no se
+automatizó una pantalla de autenticación. Usa controles neutros y un arranque
+breve; no prueba combate remoto prolongado ni otra red doméstica.
+
+Resultados sin credenciales: [JSON v0.2.2](recovery-v0.2.2-results.json).
+Reproducción: `py -3.12 re/test_online_launcher.py` (requiere login local almacenado).
+
 
 ## v0.2.1: integración del launcher
 

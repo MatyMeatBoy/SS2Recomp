@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <vector>
+#include <fstream>
+#include <sstream>
 #if defined(_WIN32)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -89,6 +91,15 @@ int supervise_launcher_recovery(const gbarecomp::GbaNetplayLaunch& launch,
     CloseHandle(process.hThread);
     WaitForSingleObject(process.hProcess, INFINITE);
     DWORD code = 1; GetExitCodeProcess(process.hProcess, &code); CloseHandle(process.hProcess);
+    if (code && !std::getenv("SS2_RECOVERY_TEST")) {
+        std::ifstream errors(logs / "game.stderr.log");
+        std::ostringstream detail;
+        detail << errors.rdbuf();
+        std::string message = "No se pudo iniciar la sala.\n\n";
+        message += detail.str().substr(0, 2000);
+        message += "\nRegistros: " + logs.string();
+        MessageBoxA(nullptr, message.c_str(), "ShiningSoul2Recomp - Error de sala", MB_OK | MB_ICONERROR);
+    }
     return static_cast<int>(code);
 #else
     throw std::runtime_error("Experimental recovery is available on Windows only.");

@@ -24,6 +24,72 @@ index 3d07d55..a72829d 100644
              runtime_trace_dump_recent(160);
              break;
          }
+diff --git a/src/runtime/launcher_netplay_seam.h b/src/runtime/launcher_netplay_seam.h
+index 15b20e6..73d5d4d 100644
+--- a/src/runtime/launcher_netplay_seam.h
++++ b/src/runtime/launcher_netplay_seam.h
+@@ -5,6 +5,9 @@
+ #include <algorithm>
+ #include <cstdio>
+ #include <stdexcept>
++#include <recomp_net/lobby_client.h>
++#include <recomp_net/host_ice.h>
++#include <recomp_net/session.h>
+ 
+ namespace gbarecomp_seam {
+ struct NetplayBackend {
+@@ -156,6 +159,51 @@ inline void accept_netplay(const RecompLauncherCNetplayLaunch& selected,const gb
+     // relay; its absence with 3+ seats is a host-relayed LAN star.
+     launch.force_input_relay=selected.force_input_relay!=0;
+     compact_netplay_ports(selected,launch.player_count,launch);
++    launch.adopt_transport = {};
++#if defined(RECOMP_LAUNCHER_HAS_HOST_RELAY_ICE)
++    if (selected.transport_ice_hub) {
++        struct Agents {
++            std::vector<RNetIceAdoptSeat> hub;
++            RNetIceAgent* guest=nullptr;
++            bool used=false;
++            ~Agents() {
++                for (auto& seat : hub) if (seat.agent) rnet_host_ice_destroy_agent(seat.agent);
++                if (guest) rnet_host_ice_destroy_agent(guest);
++            }
++        };
++        auto agents=std::make_shared<Agents>();
++        if (!launch.local_seat) {
++            RNetLobbyIceSeat seats[gbarecomp::kGbaMaxSessionPlayers]{};
++            int count=rnet_lobby_ice_take_hub(seats,gbarecomp::kGbaMaxSessionPlayers);
++            if (count<0) throw std::runtime_error("No connected ICE handover from lobby");
++            for (int i=0;i<count;++i) {
++                int slot=-1;
++                for (unsigned j=1;j<launch.player_count;++j)
++                    if (selected.slot_port[j]==seats[i].lobby_slot) slot=static_cast<int>(j);
++                agents->hub.push_back({slot,seats[i].agent});
++            }
++            if (count!=static_cast<int>(launch.player_count)-1)
++                throw std::runtime_error("Incomplete ICE room handover");
++            for (auto seat:agents->hub) if (seat.slot<1)
++                throw std::runtime_error("ICE guest has no session seat");
++        } else {
++            agents->guest=rnet_lobby_ice_take_guest_agent();
++            if (!agents->guest) throw std::runtime_error("No connected guest ICE handover from lobby");
++        }
++        launch.adopt_transport=[agents](RNetSession* session) {
++            if (agents->used) return -1;
++            int rc=agents->guest ? rnet_session_adopt_ice_agent(session,agents->guest) :
++                rnet_session_start_ice_hub_adopt(session,agents->hub.data(),static_cast<int>(agents->hub.size()));
++            if (!rc) {
++                agents->used=true; agents->guest=nullptr;
++                for (auto& seat:agents->hub) seat.agent=nullptr;
++            }
++            return rc;
++        };
++        if (auto* callbacks=recomp_netplay_host_callbacks(); callbacks && callbacks->clear_launch_pending)
++            callbacks->clear_launch_pending(callbacks->ctx);
++    }
++#endif
+     launch.pump_lobby=[] {
+         if (auto* callbacks=recomp_netplay_host_callbacks(); callbacks && callbacks->pump)
+             callbacks->pump(callbacks->ctx);
 diff --git a/src/runtime/launcher_seam.h b/src/runtime/launcher_seam.h
 index 6609185..2c93c76 100644
 --- a/src/runtime/launcher_seam.h
@@ -47,11 +113,32 @@ index 6609185..2c93c76 100644
      int rc = recomp_launcher_run_window(title.c_str(), &ls, &gi, dir.c_str(),
                                          seed_rom.c_str(),
                                          picked_rom, sizeof(picked_rom));
+diff --git a/src/runtime/multiplayer_launch.cpp b/src/runtime/multiplayer_launch.cpp
+index 8f5b93d..d2658fa 100644
+--- a/src/runtime/multiplayer_launch.cpp
++++ b/src/runtime/multiplayer_launch.cpp
+@@ -34,7 +34,7 @@ void validate_gba_netplay_launch(const GbaNetplayLaunch& l) {
+     // relayed seat and every guest dials an explicit endpoint.
+     const auto transport=gba_netplay_transport(l);
+     const bool peer_optional=transport==GbaNetplayTransport::Hub ||
+-        (transport==GbaNetplayTransport::Pair && l.local_seat==0);
++        (transport==GbaNetplayTransport::Pair && l.local_seat==0) || bool(l.adopt_transport);
+     if (!l.enabled || l.local_seat>=l.player_count || !l.session_id || l.input_delay<2 || l.input_delay>20 ||
+         l.prediction<6 || l.prediction>16 || l.bind_endpoint.empty() ||
+         (l.peer_endpoint.empty() && !peer_optional) ||
 diff --git a/src/runtime/multiplayer_launch.h b/src/runtime/multiplayer_launch.h
-index 3be2484..0a1d1e8 100644
+index 3be2484..06e04d4 100644
 --- a/src/runtime/multiplayer_launch.h
 +++ b/src/runtime/multiplayer_launch.h
-@@ -48,6 +48,8 @@ struct GbaNetplayLaunch {
+@@ -11,6 +11,7 @@
+ #include <vector>
+ 
+ namespace gba { class GbaBios; }
++struct RNetSession;
+ namespace gbarecomp {
+ struct GbaInstance;
+ struct GbaNetplayLaunch;
+@@ -48,6 +49,8 @@ struct GbaNetplayLaunch {
      // that player's cable port / machine ID, a permutation of the same range.
      unsigned player_count=2;
      unsigned local_seat=0, input_delay=6, prediction=6;
@@ -60,6 +147,15 @@ index 3be2484..0a1d1e8 100644
      std::uint32_t session_id=0;
      std::array<unsigned,kGbaMaxSessionPlayers> seat_machine{0,1,2,3};
      // Online matches dial the lobby server's UDP input relay (every peer's
+@@ -60,6 +63,8 @@ struct GbaNetplayLaunch {
+     std::string program_id, build_identity, content_sha256;
+     void (*setup_instance)(GbaInstance&)=nullptr;
+     std::function<void()> pump_lobby;
++    // Connected waiting-room transport; invoked once by the match runner.
++    std::function<int(RNetSession*)> adopt_transport;
+     // Installed by make_gba_netplay_launch. This dependency boundary keeps
+     // single-player games free of a recomp-net link requirement.
+     int (*run)(const GbaNetplayLaunch&,const GbaNetplayBoot&)=nullptr;
 diff --git a/src/runtime/multiplayer_match.cpp b/src/runtime/multiplayer_match.cpp
 index 18e1457..323e347 100644
 --- a/src/runtime/multiplayer_match.cpp
@@ -128,10 +224,18 @@ index 167b003..d8206e3 100644
      // All inputs before next_tick are confirmed. The snapshot is the entire
      // paired machine/cable system, not independent cartridge files.
 diff --git a/src/runtime/multiplayer_runner.cpp b/src/runtime/multiplayer_runner.cpp
-index 3eb97dd..1663222 100644
+index 3eb97dd..2eb9a30 100644
 --- a/src/runtime/multiplayer_runner.cpp
 +++ b/src/runtime/multiplayer_runner.cpp
-@@ -77,6 +77,7 @@ int run(const GbaNetplayLaunch& launch,const GbaNetplayBoot& boot) {
+@@ -2,6 +2,7 @@
+ #include "multiplayer_match.h"
+ #include "multiplayer_pacing.h"
+ #include "host_window.h"
++#include "netplay_status_overlay.h"
+ #include "gba_bios.h"
+ #include "sha1.h"
+ #include <algorithm>
+@@ -77,6 +78,7 @@ int run(const GbaNetplayLaunch& launch,const GbaNetplayBoot& boot) {
      options.network.local_slot=launch.local_seat;
      options.network.session_id=launch.session_id;
      options.network.input_delay=launch.input_delay;
@@ -139,7 +243,25 @@ index 3eb97dd..1663222 100644
      options.network.slot_count=static_cast<rnet_u8>(players);
      options.network.occupied_mask=(1u<<players)-1;
      options.prediction=launch.prediction; options.rollback=launch.rollback;
-@@ -182,7 +183,8 @@ int run(const GbaNetplayLaunch& launch,const GbaNetplayBoot& boot) {
+@@ -115,7 +117,7 @@ int run(const GbaNetplayLaunch& launch,const GbaNetplayBoot& boot) {
+     } detach{simulation, launch.local_seat};
+     GbaNetplayMatch match(simulation,std::move(options));
+     const auto transport=gba_netplay_transport(launch);
+-    if ((transport==GbaNetplayTransport::Hub ?
++    if (launch.adopt_transport ? launch.adopt_transport(match.transport()) : (transport==GbaNetplayTransport::Hub ?
+             rnet_session_start_lan_hub(match.transport(),launch.bind_endpoint.c_str()) :
+             rnet_session_start_lan(match.transport(),launch.bind_endpoint.c_str(),launch.peer_endpoint.c_str())))
+         throw std::runtime_error("cannot open netplay transport");
+@@ -126,6 +128,8 @@ int run(const GbaNetplayLaunch& launch,const GbaNetplayBoot& boot) {
+     window.load_input_config(boot.config_directory.string().c_str(),false);
+     window.set_fullscreen(boot.fullscreen); window.set_volume(boot.volume);
+     window.set_fps_readout(boot.show_fps);
++    window.set_host_overlay(&draw_netplay_wait);
++    std::vector<std::uint8_t> waiting_image(initial_width*160*3,17);
+     std::uint16_t buttons=0;
+     match.sample_local=[&](std::uint32_t) { return buttons; };
+     GbaNetplayPacer pacer;
+@@ -182,13 +186,22 @@ int run(const GbaNetplayLaunch& launch,const GbaNetplayBoot& boot) {
          }
          const auto connection=match.connection();
          const auto status=connection.phase==GbaConnectionPhase::Reconnecting ?
@@ -149,6 +271,44 @@ index 3eb97dd..1663222 100644
              match.phase()==GbaNetplayMatch::Phase::Starting ? std::string("Connecting") :
              (closing || (match.checkpoint_pending() && !boot.finish_tick)) ?
                  std::string("Saving and leaving - close again to discard") :
+             "Link cable - Player "+std::to_string(launch.seat_machine[launch.local_seat]+1)+" - Shift+F1 save and leave";
+         const auto title=boot.title+" - "+status;
+         if (title!=previous_title) { window.set_title(title.c_str()); previous_title=title; }
++        netplay_wait_message=match.phase()==GbaNetplayMatch::Phase::Starting ?
++            "Conectando y sincronizando jugadores..." :
++            connection.phase==GbaConnectionPhase::Reconnecting ? "Esperando que vuelva la conexion..." : "";
++        if (!netplay_wait_message.empty()) {
++            if (!window.set_surface_size(initial_width,160))
++                throw std::runtime_error("cannot resize waiting-room surface");
++            window.present(waiting_image.data());
++        }
+         if (match.take_output(output)) {
+             // A mid-raster restore waits for a complete host image. Canonical
+             // consoles intentionally retain no pixels; audio still advances.
+diff --git a/src/runtime/netplay_status_overlay.h b/src/runtime/netplay_status_overlay.h
+new file mode 100644
+index 0000000..a281be4
+--- /dev/null
++++ b/src/runtime/netplay_status_overlay.h
+@@ -0,0 +1,18 @@
++#pragma once
++#include "host_overlay.h"
++#include <string>
++namespace gbarecomp {
++// Presentation only: never enters console snapshots or network hashes.
++inline std::string netplay_wait_message;
++inline void draw_netplay_wait(HostOverlay* overlay) {
++    if (!overlay || netplay_wait_message.empty()) return;
++    const float width=static_cast<float>(overlay->view_width());
++    overlay->fill_rect(8, 55, width-16, 52, 5, {20, 27, 40, 245}, OverlaySpace::View);
++    overlay->text(width/2, 65, 9, {255,255,255,255}, "SALA MULTIJUGADOR",
++        OverlayAlign::Center, OverlaySpace::View);
++    overlay->text(width/2, 83, 7, {200,220,255,255}, netplay_wait_message.c_str(),
++        OverlayAlign::Center, OverlaySpace::View);
++    overlay->text(width/2, 96, 6, {200,200,200,255}, "Cierra la ventana para cancelar",
++        OverlayAlign::Center, OverlaySpace::View);
++}
++}
 diff --git a/src/runtime/runtime_bus_bridge.cpp b/src/runtime/runtime_bus_bridge.cpp
 index 044fc13..d44b807 100644
 --- a/src/runtime/runtime_bus_bridge.cpp

@@ -1,4 +1,4 @@
-param([string]$Version = '0.2.1', [string]$BuiltExecutable = 'build/netplay-testing/ShiningSoul2Recomp.exe')
+param([string]$Version = '0.2.2', [string]$BuiltExecutable = 'build/netplay-testing/ShiningSoul2Recomp.exe')
 $ErrorActionPreference = 'Stop'
 $ss2Root = Split-Path -Parent $PSScriptRoot
 $ss2Name = "ShiningSoul2Recomp-v$Version-windows-x64"
@@ -8,7 +8,7 @@ New-Item -ItemType Directory -Path $ss2Stage | Out-Null
 $ss2Files = @(
  'Jugar ShiningSoul2Recomp.bat', 'README.md', 'LICENSE',
  'tools/run_recoverable.ps1',
- 'docs/NETPLAY_RECOVERY.md', 'docs/NETPLAY_VALIDATION.md', 'docs/recovery-v0.2.0-results.json', 'docs/recovery-v0.2.1-results.json',
+ 'docs/NETPLAY_RECOVERY.md', 'docs/NETPLAY_VALIDATION.md', 'docs/recovery-v0.2.0-results.json', 'docs/recovery-v0.2.1-results.json', 'docs/recovery-v0.2.2-results.json',
  "docs/RELEASE_v$Version.md", 'recomp/launcher/NOTICE.md', 'build/ShiningSoul2Recomp.exe', 'build/SDL2.dll',
  'build/mods/state.toml',
  'build/mods/packages/shining-soul-2.enhancement.adaptive-view/1.0.0/manifest.toml'
@@ -35,11 +35,13 @@ $ss2Licenses = @{
  'gbarecomp/external/recomp-net/LICENSE' = 'recomp-net.txt'
  'gbarecomp/external/rbengine/LICENSE' = 'rbengine.txt'
  'gbarecomp/external/arm-recomp-core/LICENSE' = 'arm-recomp-core.txt'
+ 'build/_deps/libjuice-src/LICENSE' = 'libjuice.txt'
 }
 New-Item -ItemType Directory -Path (Join-Path $ss2Stage 'licenses') | Out-Null
 foreach ($ss2License in $ss2Licenses.GetEnumerator()) {
  Copy-Item -LiteralPath (Join-Path $ss2Root $ss2License.Key) -Destination (Join-Path $ss2Stage "licenses/$($ss2License.Value)")
 }
+[IO.File]::WriteAllText((Join-Path $ss2Stage 'licenses/libjuice-source.txt'), "libjuice v1.7.2, unmodified source (MPL-2.0): https://github.com/paullouisageneau/libjuice/tree/v1.7.2`nSource archive: https://github.com/paullouisageneau/libjuice/archive/refs/tags/v1.7.2.tar.gz`nBuild configuration: RNET_ENABLE_ICE=ON, RNET_ICE_BUNDLE_STATIC=ON. See the game repository CMakeLists.txt.`n")
 $ss2SdlHeader = Join-Path $ss2Root '../PrimatesGBA/deps/SDL2-2.32.10/x86_64-w64-mingw32/include/SDL2/SDL.h'
 $ss2SdlNotice = (Get-Content -LiteralPath $ss2SdlHeader -TotalCount 20) -join "`n"
 [IO.File]::WriteAllText((Join-Path $ss2Stage 'licenses/SDL2.txt'), "$ss2SdlNotice`n")

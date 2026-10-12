@@ -1,6 +1,7 @@
 #include "ss2_recovery_runner.h"
 #include "gba_bios.h"
 #include "host_window.h"
+#include "netplay_status_overlay.h"
 #include "multiplayer_pacing.h"
 #include "multiplayer_session.h"
 #include "save_config.h"
@@ -210,6 +211,8 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
     window.load_input_config(boot.config_directory.string().c_str(), false);
     window.set_fullscreen(boot.fullscreen);
     window.set_volume(boot.volume);
+    window.set_host_overlay(&draw_netplay_wait);
+    std::vector<std::uint8_t> waiting_image(width*160*3,17);
     GbaNetplayPacer pacer;
     std::string old_title;
     std::uint32_t reported = UINT32_MAX;
@@ -260,7 +263,14 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
                 window.push_audio_samples(samples.data(), count);
             simulation.discard_audio_output();
         }
-        auto title = boot.title + " - " + room.status();
+        auto status=room.status();
+        netplay_wait_message=status.rfind("Online",0)==0 ? "" : status;
+        if (!netplay_wait_message.empty()) {
+            if (!window.set_surface_size(width,160))
+                throw std::runtime_error("cannot resize recovery waiting-room surface");
+            window.present(waiting_image.data());
+        }
+        auto title = boot.title + " - " + status;
         if (title != old_title) {
             window.set_title(title.c_str());
             old_title = title;

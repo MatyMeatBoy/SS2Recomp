@@ -3,6 +3,8 @@
 #include <exception>
 #include <string>
 #include <vector>
+#include <cstdlib>
+#include <fstream>
 
 #include "runtime.h"
 #include "ss2_extended_view.h"
@@ -40,6 +42,14 @@ int safe_netplay_run(const gbarecomp::GbaNetplayLaunch& requested, const gbareco
 }
 
 int selected_netplay_run(const gbarecomp::GbaNetplayLaunch& launch, const gbarecomp::GbaNetplayBoot& boot) {
+#if defined(_WIN32)
+    if (boot.finish_tick && std::getenv("SS2_RECOVERY_TEST") && std::getenv("LNG_TEST_HIDDEN"))
+        _putenv_s("SDL_VIDEODRIVER", "dummy");
+#endif
+    std::ofstream trace(boot.config_directory / "netplay-last.log");
+    trace << "Starting players=" << launch.player_count << " seat=" << launch.local_seat
+          << " ICE=" << bool(launch.adopt_transport) << " relay=" << launch.force_input_relay
+          << " room=" << launch.session_id << std::endl;
     bool recovery = cli_safe_profile;
 #if defined(GBAGAME_RECOMP_UI)
     if (ss2::launcher_recovery_selected)

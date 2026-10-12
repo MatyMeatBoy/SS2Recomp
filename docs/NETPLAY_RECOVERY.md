@@ -1,4 +1,4 @@
-# Recuperación automática — v0.2.1 (experimental)
+# Recuperación automática — v0.2.2 (experimental)
 
 En Windows, `--netplay-safe` con direcciones directas activa TCP recuperable
 para 2–4 jugadores. El UDP de recomp-net permanece disponible iniciando el
@@ -11,7 +11,7 @@ esta recuperación no se aplica a ese servicio.
 2. Abre **Netplay (experimental)**. El host selecciona **Anfitrión** y crea sala;
    cada invitado introduce su IP de Hamachi y elige un asiento diferente.
 3. Selecciona 2–4 participantes; todos deben indicar la misma cantidad, puerto
-   TCP (19740 por defecto) e ID de sala (24681 por defecto).
+   TCP (19740 por defecto) e ID de sala (24683 por defecto).
 4. Usa el mismo ID en todos. Una sesión nueva inicia otra partida;
    reutilizar la sesión existente recupera su último estado confirmado.
 

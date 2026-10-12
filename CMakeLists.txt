@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(ShiningSoul2Recomp VERSION 0.2.1 LANGUAGES C CXX)
+project(ShiningSoul2Recomp VERSION 0.2.2 LANGUAGES C CXX)
 
 option(SS2_BUILD_LINK_PROBE "Build the headless scripted multiplayer qualification tool" OFF)
 
@@ -12,6 +12,9 @@ else()
     set(_netplay_default ON)
 endif()
 option(GBARECOMP_NETPLAY "Build desktop link-cable netplay (up to 4 consoles)" ${_netplay_default})
+if(GBARECOMP_NETPLAY AND NOT ANDROID)
+    set(RNET_ENABLE_ICE ON CACHE BOOL "Connected Discord lobby transport" FORCE)
+endif()
 
 set(GBARECOMP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/gbarecomp"
     CACHE PATH "Path to this game's gbarecomp worktree")
@@ -80,6 +83,11 @@ target_compile_definitions(ShiningSoul2Recomp PRIVATE
     GBARECOMP_DEFAULT_GAME_CONFIG="game.toml")
 
 if(SS2_BUILD_LINK_PROBE)
+    foreach(_ice_test IN ITEMS host_ice_test ice_hub_test)
+        add_executable(SS2_${_ice_test} "${GBARECOMP_ROOT}/external/recomp-net/tests/${_ice_test}.c")
+        target_include_directories(SS2_${_ice_test} PRIVATE "${GBARECOMP_ROOT}/external/recomp-net/src")
+        target_link_libraries(SS2_${_ice_test} PRIVATE recomp_net)
+    endforeach()
     if(NOT GBARECOMP_NETPLAY)
         message(FATAL_ERROR "SS2_BUILD_LINK_PROBE requires GBARECOMP_NETPLAY")
     endif()

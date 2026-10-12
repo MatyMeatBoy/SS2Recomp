@@ -1,0 +1,23 @@
+{
+  "version": "0.2.2",
+  "executable_sha256": "45273e43495db77c31cd2e8706d1ce76274e4eb573f23071ff1fda702125741a",
+  "experimental_pair": {
+    "players": 2, "ticks": 90, "elapsed_seconds": 8.81,
+    "exit_codes": [0, 0], "passed": true,
+    "identical_state_sha256": "8b003bfa5983ea906ec1caeb4b5e2f6afb98b7831536c99c0324da9144c86248"
+  },
+  "experimental_network_cut": {
+    "players": 4, "ticks": 120, "cut_seconds": 3, "elapsed_seconds": 20.81,
+    "exit_codes": [0, 0, 0, 0], "passed": true,
+    "identical_state_sha256": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d"
+  },
+  "online_lobby": {
+    "players": 2, "ticks": 120, "transport": "adopted ICE",
+    "view": "16:9", "stored_login": true, "same_pc": true,
+    "exit_codes": [0, 0], "passed": true,
+    "identical_checkpoint_sha256": "825c9d105095be300ca61594ed301325169de071ee784d5de146bac9411ab712"
+  },
+  "occupied_port": {"inline_error_visible": true, "launcher_stayed_open": true},
+  "host_ice_library_test": {"players": 3, "passed": true},
+  "limits": ["Brief boot tests with neutral controls", "No separate-house Hamachi or ICE session", "No prolonged linked combat test"]
+}

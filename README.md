@@ -24,7 +24,7 @@ salas/netplay de recomp-ui.
 | Netplay 2 jugadores | Integrado |
 | Netplay 3–4 jugadores | Integrado; delay-sync recomendado |
 | Rollback 4 jugadores | Experimental, probado con red degradada |
-| Release Windows x64 | [v0.2.1](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.1) |
+| Release Windows x64 | [v0.2.2](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.2) |
 
 La prioridad de esta etapa es ampliar las pruebas entre PCs reales, cubrir más
 escenas del juego y validar reconexión durante una partida prolongada.

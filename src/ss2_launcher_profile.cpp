@@ -4,6 +4,9 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#if defined(_WIN32)
+#include <winsock2.h>
+#endif
 namespace ss2 {
 bool launcher_recovery_selected = false;
 int prepare_recovery_launch(int players, int seat, uint32_t session, int port,
@@ -19,6 +22,31 @@ int prepare_recovery_launch(int players, int seat, uint32_t session, int port,
         for (unsigned char c : address)
             if (!std::isalnum(c) && c != '.' && c != '-')
                 return fail("La direccion debe ser IPv4 o un nombre DNS, sin puerto.");
+#if defined(_WIN32)
+    // Validate while the modal is still open. Do not steal an existing host's
+    // port with SO_REUSEADDR; the worker remains the final authority on bind.
+    if (!seat) {
+        WSADATA data{};
+        if (WSAStartup(MAKEWORD(2, 2), &data))
+            return fail("No se pudo iniciar la red de Windows.");
+        SOCKET probe = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        int exclusive = 1;
+        sockaddr_in endpoint{};
+        endpoint.sin_family = AF_INET;
+        endpoint.sin_port = htons(static_cast<unsigned short>(port));
+        endpoint.sin_addr.s_addr = htonl(INADDR_ANY);
+        bool available = probe != INVALID_SOCKET;
+        if (available) {
+            available = !setsockopt(probe, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
+                reinterpret_cast<const char*>(&exclusive), sizeof(exclusive)) &&
+                !bind(probe, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint));
+            closesocket(probe);
+        }
+        WSACleanup();
+        if (!available)
+            return fail("Puerto TCP ocupado o reservado. Elige otro (por ejemplo 19741) y compartelo con todos los invitados. Si ya creaste la sala, selecciona Invitado para conectarte.");
+    }
+#endif
     *out = {};
     out->enabled = 1;
     out->local_slot = seat;
