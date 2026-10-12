@@ -12,7 +12,7 @@ p.add_argument('--label', default='baseline')
 p.add_argument('--open-menu', action='store_true')
 p.add_argument('--pingpong', type=int, default=0, help='Reverse horizontal movement every N frames without releasing other keys')
 p.add_argument('--capture-every', type=int, default=120)
-p.add_argument('--equipment-wide', action='store_true', help='Opt in only inside the isolated test app')
+p.add_argument('--native-view', action='store_true', help='Disable the main widescreen mod only inside the isolated test app')
 p.add_argument('--width', type=int, default=284)
 a = p.parse_args()
 out = ROOT/'re/run'/f'transition-{a.label}-{time.time_ns()}'
@@ -25,17 +25,21 @@ for name in ('SDL2.dll',):
 for name in ('assets', 'mods'):
     if (exe.parent/name).exists():
         shutil.copytree(exe.parent/name,staged/name,ignore=shutil.ignore_patterns('state.toml'))
-if a.equipment_wide:
-    (staged/'mods/state.toml').write_text('format_version = 1\n\n[[package]]\nid = "shining-soul-2.enhancement.equipment-view"\nversion = "1.0.0"\n\n[[feature]]\npackage_id = "shining-soul-2.enhancement.equipment-view"\nid = "equipment-view"\nenabled = true\n')
+if a.native_view:
+    (staged/'mods/state.toml').write_text('format_version = 1\n\n[[package]]\nid = "shining-soul-2.enhancement.adaptive-view"\nversion = "1.0.0"\n\n[[feature]]\npackage_id = "shining-soul-2.enhancement.adaptive-view"\nid = "adaptive-view"\nenabled = false\n')
 replay = out/'input.txt'
 replay.write_text(f'# gbarecomp-keyinput-v1\n0,0x{a.keys:04X}\n')
 env = dict(os.environ, SDL_AUDIODRIVER='dummy', GBARECOMP_SS2_WS_TRACE='1',
-           GBARECOMP_INPUT_REPLAY=str(replay))
+           GBARECOMP_INPUT_REPLAY=str(replay), GBARECOMP_VIEW_WIDTH=str(a.width))
+window_args=['--no-window']
+if a.width != 284 and not a.native_view:
+    env.update(SDL_VIDEODRIVER='dummy',GBARECOMP_FORCE_DRAWABLE=f'{a.width*4}x640')
+    window_args=['--resize-view']
 with (out/'runtime.log').open('wb') as log:
     process = subprocess.Popen([str(staged/exe.name), '--no-launcher', '--bios',
         str(ROOT/'build/gba_bios.bin'), '--rom', str(ROOT/'roms/shining_soul_2_europe.gba'),
         '--load-state', str(ROOT/f'roms/shining_soul_2_europe.state{a.slot}'),
-        '--no-window', '--volume', '0', '--screen', 'raw', '--view-width', str(a.width), '--tcp', '19935',
+        *window_args, '--volume', '0', '--screen', 'raw', '--view-width', str(a.width), '--tcp', '19935',
         '--save-path', str(out/'isolated.sav'), str(ROOT/'game.toml')],
         cwd=ROOT, env=env, stdout=log, stderr=log)
     try:
@@ -68,7 +72,8 @@ with (out/'runtime.log').open('wb') as log:
             iw=bytes.fromhex(cmd('read_iwram',addr=0x3170,len=0xa0)['data'])
             io=bytes.fromhex(cmd('read_io',addr=0,len=0x60)['data'])
             shot=cmd('screenshot');rgb=bytes.fromhex(shot['data']);w=shot['w']
-            assert w == a.width, f'Widescreen test accidentally running at {w}'
+            expected_width=240 if a.native_view else a.width
+            assert w == expected_width, f'Widescreen test accidentally running at {w}, expected {expected_width}'
             left=(w-240)//2
             native=b''.join(rgb[(y*w+left)*3:(y*w+left+240)*3] for y in range(160))
             camera=struct.unpack_from('<2h',iw,0x7c)
@@ -82,7 +87,7 @@ with (out/'runtime.log').open('wb') as log:
                      scroll=[struct.unpack_from('<2H',io,0x14+4*i) for i in range(3)],margin_lit=lit)
             row['oam']=cmd('read_oam',addr=0,len=1024)['data']
             rows.append(row)
-            if frame in (0,120,240):
+            if frame in (0,120,150,240):
                 for region,size in [('iwram',32768),('ewram',262144),('vram',98304),('io',1024),('oam',1024),('pal',1024)]:
                     (out/f'{frame:04}-{region}.bin').write_bytes(bytes.fromhex(cmd('read_'+region,addr=0,len=size)['data']))
             if frame%a.capture_every==0 or (len(rows)>1 and (maps!=rows[-2]['maps'] or (lit==0)!=(rows[-2]['margin_lit']==0))):

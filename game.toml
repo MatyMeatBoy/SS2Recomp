@@ -37,9 +37,8 @@ debug_port = 19901
 window_title = "ShiningSoul2Recomp"
 
 [video]
-# GBA-panel colour correction (the palette was authored for the unlit
-# original GBA screen). Adaptive widescreen is owned by the mod catalog.
-screen = "frontlit"
+# Preserve original palette values. Adaptive widescreen is owned by the mod catalog.
+screen = "raw"
 sharp_filter = true
 
 # ---------------------------------------------------------------------------

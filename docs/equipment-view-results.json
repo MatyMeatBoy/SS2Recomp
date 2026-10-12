@@ -3,7 +3,7 @@
   "equipment_frames": 300,
   "equipment_guest_hash_differences": 0,
   "equipment_native_pixel_hash_differences": 0,
-  "equipment_default_enabled": false,
+  "integration": "Main Adaptive Widescreen package; no separate equipment toggle",
   "ppu_mirror_pixel_test": "PASS",
   "ppu_inventory_margin_ui_isolation_test": "PASS",
   "ppu_disable_reset_test": "PASS",

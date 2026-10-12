@@ -1,0 +1,33 @@
+{
+  "settings": {
+    "native": true,
+    "launcher": false,
+    "executable": null,
+    "players": 4,
+    "fault": "network",
+    "frames": 120,
+    "at": 45,
+    "cut_seconds": 3.0,
+    "initial_state": null,
+    "inputs": null,
+    "timeout": 90.0
+  },
+  "elapsed": 17.17,
+  "exit_codes": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "fault_injected": true,
+  "restarts": 0,
+  "proxy_bytes": 25713314,
+  "executable_sha256": "dfb1d5adc6cd72108cbf76b0e675c7fa68cdb4da332b06e13b0adf84c5074abe",
+  "state_sha256": {
+    "seat0": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d",
+    "seat1": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d",
+    "seat2": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d",
+    "seat3": "b0c8f17dadee8252ef438bf258fbe63b925ca65f0bda58e1da3010bc47aa537d"
+  },
+  "passed": true
+}

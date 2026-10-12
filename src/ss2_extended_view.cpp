@@ -48,6 +48,7 @@ struct Layer {
 struct FieldFrame {
     const gba::GbaBus* bus = nullptr;
     unsigned long long vblank = ~0ull;
+    std::uint64_t camera_signature = 0;
     bool field = false;
     Layer layers[4];
 };
@@ -216,13 +217,18 @@ bool resolve_camera(gba::GbaBus* bus, const std::uint8_t* io, int bg, Layer& lay
     const int cy = static_cast<std::int16_t>(read16(ram, 0x31EE)) +
                    static_cast<std::int16_t>(read16(ram, 0x31F6)) +
                    static_cast<std::int16_t>(read16(ram, desc + 6));
-    if ((cx & 255) == hofs && (cy & 255) == vofs) {
-        int total = 0;
-        const int score = score_camera(bus, io, bg, layer, cx, cy, &total);
-        if (total >= 16 && score * 4 >= total * 3) {
-            layer.camera_x = cx; layer.camera_y = cy;
-            return true;
-        }
+    const int dx = ((hofs - cx + 128) & 255) - 128;
+    const int dy = ((vofs - cy + 128) & 255) - 128;
+    if (dx >= -16 && dx <= 16 && dy >= -16 && dy <= 16) {
+        // Ring uploads are incremental: matching their partially updated
+        // contents can select a different occurrence of a repeated pattern.
+        // The engine's full coordinate and matching hardware scroll are the
+        // authoritative origin; the authored map does not depend on uploads.
+        // RAM can already contain the next camera while hardware scroll
+        // still describes this scanline. Recover its nearest full coordinate
+        // instead of jumping a complete 256-pixel ring backwards.
+        layer.camera_x = cx + dx; layer.camera_y = cy + dy;
+        return true;
     }
     int best = -1;
     int best_total = 0;
@@ -264,10 +270,27 @@ void trace_frame_once(const FieldFrame& frame, const std::uint8_t* io) {
 }
 
 const FieldFrame& current_frame(gba::GbaBus* bus) {
-    if (g_frame.bus == bus && g_frame.vblank == g_runtime_vblank_starts) return g_frame;
+    // The guest updates scroll and tile rings after the vblank policy callback.
+    // A vblank-only cache can retain an old/ambiguous map origin throughout
+    // the next visible frame, exposing unrelated ring contents at the sides.
+    std::uint64_t signature = 0;
+    if (bus) {
+        const auto* io = bus->io().raw();
+        signature = iwram32(bus, 0x030031ECu);
+        signature = signature * 1099511628211ull ^ iwram32(bus, 0x030031F4u);
+        for (unsigned bg = 1; bg <= 3; ++bg) {
+            signature = signature * 1099511628211ull ^ read16(io,0x10u+bg*4);
+            signature = signature * 1099511628211ull ^ read16(io,0x12u+bg*4);
+        }
+        signature = signature * 1099511628211ull ^ read16(io,0);
+        signature = signature * 1099511628211ull ^ read16(io,0x0C);
+    }
+    if (g_frame.bus == bus && g_frame.vblank == g_runtime_vblank_starts &&
+        g_frame.camera_signature == signature) return g_frame;
     g_frame = {};
     g_frame.bus = bus;
     g_frame.vblank = g_runtime_vblank_starts;
+    g_frame.camera_signature = signature;
     if (!bus) return g_frame;
     const std::uint8_t* io = bus->io().raw();
     if (field_registers(io) && status_bar_present(bus)) {

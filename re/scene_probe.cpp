@@ -64,7 +64,58 @@ int main(int argc, char** argv) {
         if (std::any_of(image.begin(),image.end(),[](auto x){return x!=0;}))
             throw std::runtime_error("closed transition leaked BG or OBJ pixels");
         std::cout << "PASS: OBJ X=256, negative wrap, closed transition BG+OBJ\n";
-        if (argc == 2) {
+        if (argc == 3) {
+            const std::filesystem::path fixture(argv[1]), output(argv[2]);
+            std::filesystem::create_directories(output);
+            auto field_io=read((fixture / "0150-io.bin").string().c_str());
+            for (auto entry : {std::pair{"iwram",32768}, {"ewram",262144}, {"vram",98304}, {"pal",1024}, {"oam",1024}}) {
+                auto destination = entry.first == std::string("iwram") ? bus.iwram_ptr() :
+                    entry.first == std::string("ewram") ? bus.ewram_ptr() :
+                    entry.first == std::string("vram") ? bus.vram_ptr() :
+                    entry.first == std::string("pal") ? bus.pal_ptr() : bus.oam_ptr();
+                load((fixture / (std::string("0150-")+entry.first+".bin")).string().c_str(),destination,entry.second);
+            }
+            for (unsigned i=0;i<field_io.size();i+=2)
+                bus.io().write16(i,field_io[i] | (unsigned(field_io[i+1])<<8));
+            g_ws_extra_left = g_ws_extra_right = 120;
+            ppu.set_view_margins(120,120,0,0);
+            policy.frame(nullptr);
+            // Emulate the interval between the RAM camera update and the
+            // matching scroll write. Margin entries must stay with the
+            // hardware scanline, including at a 256-pixel ring boundary.
+            struct Sample { int bg, x, y, action; std::uint16_t entry; };
+            std::vector<Sample> samples;
+            for (int bg=1; bg<=3; ++bg)
+                for (int y=0; y<160; y+=8)
+                    for (int x=-120; x<360; x+=8) {
+                        if (x>=0 && x<240) continue;
+                        std::uint16_t entry=0;
+                        const int action=gba::g_ws_tilemap_provider(bg,x,y,&entry);
+                        samples.push_back({bg,x,y,action,entry});
+                    }
+            const auto camera=unsigned(bus.iwram_ptr()[0x31ec]) |
+                (unsigned(bus.iwram_ptr()[0x31ed])<<8);
+            for (int delta : {-8,-2,2,8}) {
+                put(bus.iwram_ptr(),0x31ec,camera+delta);
+                policy.frame(nullptr);
+                for (const auto& sample : samples) {
+                    std::uint16_t entry=0;
+                    const int action=gba::g_ws_tilemap_provider(sample.bg,sample.x,sample.y,&entry);
+                    if (action!=sample.action || (action==gba::kWsTilemapReplace && entry!=sample.entry))
+                        throw std::runtime_error("margin origin changed before hardware scroll update");
+                }
+            }
+            put(bus.iwram_ptr(),0x31ec,camera);
+            policy.frame(nullptr);
+            std::cout << "PASS: camera/scroll phase mismatch preserves authored margins\n";
+            image.resize(ppu.render_bytes());
+            for (unsigned layer=0;layer<5;++layer) {
+                ppu.render(image.data(),0x40 | (0x100u<<layer),bus.io().raw(),bus.vram_ptr(),bus.oam_ptr(),bus.pal_ptr());
+                std::ofstream out(output/ ("layer-"+std::to_string(layer)+".ppm"),std::ios::binary);
+                out<<"P6\n480 160\n255\n";
+                out.write(reinterpret_cast<const char*>(image.data()),image.size());
+            }
+        } else if (argc == 2) {
             const std::filesystem::path fixture(argv[1]);
             auto menu_io = read((fixture / "0240-io.bin").string().c_str());
             load((fixture / "0240-vram.bin").string().c_str(),bus.vram_ptr(),98304);

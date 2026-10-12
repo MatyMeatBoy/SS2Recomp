@@ -19,25 +19,24 @@ gbarecomp, with adaptive widescreen and linked GBA multiplayer for 2–4 players
 | --- | --- |
 | Static guest execution | Verified on documented test routes; whole-game coverage is not claimed |
 | Adaptive widescreen | Real authored field maps, starting at 284×160; no stretching |
-| Map transitions | Local development build fixes scenery leaking through side margins during scene changes |
-| Sprite placement | Local development build preserves right-margin coordinates across X=255/256 |
+| Map transitions | Expanded scenery follows the game's scene-transition masks |
+| Sprite placement | Right-margin coordinates preserved across X=255/256 |
 | Recoverable LAN netplay | Experimental, 2–4 players; can wait for network confirmations |
 | Discord-linked lobby / ICE | Two local processes tested through the real lobby; external-home gameplay remains unverified |
 | Predictive recoverable netplay | Work in progress; not enabled or qualified yet |
-| Published Windows release | [v0.2.2](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.2) |
+| Published Windows release | [v0.2.3](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.3) |
 
 See [architecture](docs/ARCHITECTURE.md), [network validation](docs/NETPLAY_VALIDATION.md),
-and [scene-transition validation](docs/SCENE_TRANSITIONS.md). Development fixes
-listed above are newer than the published v0.2.2 package.
+and [scene-transition validation](docs/SCENE_TRANSITIONS.md), plus the
+[field-margin regression](docs/FIELD_MARGIN_FIX.md).
 
 ## Windows quick start
 
 1. Download and extract the complete release ZIP, preserving `build` and `tools`.
 2. Open `build/ShiningSoul2Recomp.exe`, or the included `Jugar ShiningSoul2Recomp.bat`.
 3. Select your own ROM and BIOS in the launcher.
-4. Use the Mods tab to enable adaptive widescreen. The optional **Adaptive Equipment
-   Background** mod mirrors the inventory backdrop into the added columns and is
-   **disabled by default**; interactive cells and cursor stay centered.
+4. Use the Mods tab to enable adaptive widescreen. This includes the mirrored
+   equipment backdrop; interactive cells and cursor stay centered.
    Adaptive widescreen starts at 284×160 and adapts
    to the display in fullscreen. Menus and unsupported scenes retain native composition.
 

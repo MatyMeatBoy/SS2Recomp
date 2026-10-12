@@ -186,6 +186,8 @@ if(EXISTS "${SS2_PRELOADED_MODS}/packages")
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${SS2_PRELOADED_MODS}"
             "$<TARGET_FILE_DIR:ShiningSoul2Recomp>/mods"
+        COMMAND ${CMAKE_COMMAND} -E rm -f
+            "$<TARGET_FILE_DIR:ShiningSoul2Recomp>/mods/packages/shining-soul-2.enhancement.equipment-view/1.0.0/manifest.toml"
         COMMENT "Preloading the Shining Soul II mod catalog")
 endif()
 
