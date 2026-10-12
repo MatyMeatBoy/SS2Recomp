@@ -1,0 +1,24 @@
+format_version = 1
+id = "shining-soul-2.enhancement.equipment-view"
+version = "1.0.0"
+name = "Adaptive Equipment Menu"
+author = "ShiningSoul2Recomp"
+description = "Extends the inventory's scrolling decorative background to the window aspect ratio. Interactive cells, items and cursor retain their original positions and pixel size."
+license = "MIT"
+resolver = "declarative"
+save_compatibility = "shared"
+
+[[target]]
+game_id = "shining-soul-2-eu"
+rom_sha1 = "aa1288be9257337abdfe3034898cf6c7aa778fbc"
+
+[[feature]]
+id = "equipment-view"
+name = "Adaptive Equipment Background"
+description = "Mirror the original decorative texture at both screen edges without stretching or duplicating inventory cells. Disabled by default."
+group = "Display"
+default_enabled = false
+
+[[plugin]]
+feature = "equipment-view"
+id = "shining-soul-2.equipment-view"

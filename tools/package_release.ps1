@@ -10,13 +10,17 @@ $ss2Files = @(
  'tools/run_recoverable.ps1',
  'docs/NETPLAY_RECOVERY.md', 'docs/NETPLAY_VALIDATION.md', 'docs/recovery-v0.2.0-results.json', 'docs/recovery-v0.2.1-results.json', 'docs/recovery-v0.2.2-results.json',
  "docs/RELEASE_v$Version.md", 'recomp/launcher/NOTICE.md', 'build/ShiningSoul2Recomp.exe', 'build/SDL2.dll',
- 'build/mods/state.toml',
- 'build/mods/packages/shining-soul-2.enhancement.adaptive-view/1.0.0/manifest.toml'
+ 'docs/EQUIPMENT_VIEW.md', 'docs/equipment-view-results.json',
+ 'mods/preloaded/packages/shining-soul-2.enhancement.adaptive-view/1.0.0/manifest.toml',
+ 'mods/preloaded/packages/shining-soul-2.enhancement.equipment-view/1.0.0/manifest.toml'
 )
 foreach ($ss2File in $ss2Files) {
  $ss2Source = Join-Path $ss2Root $ss2File
  if ($ss2File -eq 'build/ShiningSoul2Recomp.exe') { $ss2Source = Join-Path $ss2Root $BuiltExecutable }
  $ss2Destination = Join-Path $ss2Stage $ss2File
+ if ($ss2File.StartsWith('mods/preloaded/')) {
+  $ss2Destination = Join-Path $ss2Stage ('build/mods/' + $ss2File.Substring('mods/preloaded/'.Length))
+ }
  New-Item -ItemType Directory -Path (Split-Path -Parent $ss2Destination) -Force | Out-Null
  Copy-Item -LiteralPath $ss2Source -Destination $ss2Destination
 }

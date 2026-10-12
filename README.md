@@ -35,7 +35,10 @@ listed above are newer than the published v0.2.2 package.
 1. Download and extract the complete release ZIP, preserving `build` and `tools`.
 2. Open `build/ShiningSoul2Recomp.exe`, or the included `Jugar ShiningSoul2Recomp.bat`.
 3. Select your own ROM and BIOS in the launcher.
-4. Use the Mods tab to enable adaptive widescreen. It starts at 284×160 and adapts
+4. Use the Mods tab to enable adaptive widescreen. The optional **Adaptive Equipment
+   Background** mod mirrors the inventory backdrop into the added columns and is
+   **disabled by default**; interactive cells and cursor stay centered.
+   Adaptive widescreen starts at 284×160 and adapts
    to the display in fullscreen. Menus and unsupported scenes retain native composition.
 
 Required assets:

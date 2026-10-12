@@ -53,6 +53,16 @@ struct FieldFrame {
 };
 
 FieldFrame g_frame;
+bool g_equipment_widescreen = false;
+std::uint16_t read16(const std::uint8_t* p, std::uint32_t offset);
+
+bool equipment_registers(const std::uint8_t* io) {
+    // Inventory's scrolling decorative BG3 is an intentionally repeating
+    // 256x256 texture. BG2 contains cells and labels and must never repeat.
+    return g_equipment_widescreen && read16(io, 0) == 0x1D40 &&
+           read16(io, 0x08) == 0x1C08 && read16(io, 0x0C) == 0x9A01 &&
+           read16(io, 0x0E) == 0x1F03;
+}
 
 struct HudRect {
     int x0;
@@ -278,6 +288,8 @@ const FieldFrame& current_frame(gba::GbaBus* bus) {
 int field_tilemap_provider(int bg, int hw_x, int screen_y, std::uint16_t* out_entry) {
     gba::GbaBus* bus = gbarecomp::active_bus();
     if (!bus || !out_entry || bg < 1 || bg > 3) return gba::kWsTilemapUnavailable;
+    if (bg == 3 && equipment_registers(bus->io().raw()))
+        return gba::kWsTilemapKeepWrapped;
     const FieldFrame& frame = current_frame(bus);
     const Layer& layer = frame.layers[bg];
     if (!frame.field || !layer.valid) return gba::kWsTilemapUnavailable;
@@ -295,6 +307,16 @@ bool inside(const HudRect& rect, int x, int y) {
 
 int hud_bg_x_provider(int bg, int output_x, int screen_y, int* out_hw_x) {
     gba::GbaBus* bus = gbarecomp::active_bus();
+    if (bg == 3 && out_hw_x && bus && equipment_registers(bus->io().raw())) {
+        const int x = output_x - static_cast<int>(g_ws_extra_left);
+        if (x < 0 || x >= 240) {
+            // Reflect the native decorative plane at its exact pixel edges.
+            // -1 maps to 0, 240 maps to 239; scroll and animation stay intact.
+            *out_hw_x = x < 0 ? -x - 1 : 479 - x;
+            return 1;
+        }
+        return 0;
+    }
     if (bg != 0 || !out_hw_x || !bus || !current_frame(bus).field) return 0;
 
     const int hw_x = output_x - static_cast<int>(g_ws_extra_left);
@@ -353,6 +375,12 @@ int hud_obj_x_provider(int, std::uint16_t attr0, std::uint16_t attr1,
 
 int transition_window_provider(const std::uint8_t* io, int hw_x, int y,
                                std::uint16_t* out_mask) {
+    if (equipment_registers(io)) {
+        // Only the decorative plane may occupy inventory margins. The native
+        // ring and offscreen OBJ entries can contain other menu pages/icons.
+        *out_mask = (1u << 3) | (1u << 5);
+        return 1;
+    }
     // SS2 closes scenes using WIN0 (inside=0, outside=all layers), not by
     // fading only the palette. Continue that mask to the expanded edges.
     // Use the PPU's scanline IO snapshot: the guest may update it mid-frame.
@@ -376,12 +404,17 @@ void field_frame_policy(const gbarecomp::ExtendedViewFrameInfo*) {
     g_frame = {};
     gba::GbaBus* bus = gbarecomp::active_bus();
     const FieldFrame& frame = current_frame(bus);
-    gba::g_ws_pillarbox = frame.field ? 0 : 1;
+    gba::g_ws_pillarbox = (frame.field || (bus && equipment_registers(bus->io().raw()))) ? 0 : 1;
     gba::g_ws_pillarbox_left = 0;
     gba::g_ws_pillarbox_right = 0;
 }
 
 }  // namespace
+
+void enable_equipment_widescreen(bool enabled) {
+    g_equipment_widescreen = enabled;
+    g_frame = {};
+}
 
 void configure_run_options(gbarecomp::RunOptions& opts) {
     // Adaptive widescreen follows the window/fullscreen aspect: 16:9 at 160
@@ -412,7 +445,7 @@ void install_extended_view(std::uint32_t, std::uint32_t) {
     g_frame = {};
     gba::g_ws_tilemap_provider = &field_tilemap_provider;
     gba::g_ws_bg_x_provider = &hud_bg_x_provider;
-    gba::g_ws_bg_x_provider_layers = 1u << 0;
+    gba::g_ws_bg_x_provider_layers = (1u << 0) | (1u << 3);
     gba::g_ws_obj_attr_x_provider = &hud_obj_x_provider;
     gba::g_ws_margin_window_provider = &transition_window_provider;
     gba::g_ws_authored_margin_layers = 1;
