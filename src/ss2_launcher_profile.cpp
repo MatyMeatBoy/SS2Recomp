@@ -1,4 +1,5 @@
 #include "ss2_launcher_profile.h"
+#include "ss2_local_multiplayer.h"
 #include "recomp_launcher.h"
 #include <cctype>
 #include <cstdio>
@@ -9,6 +10,28 @@
 #endif
 namespace ss2 {
 bool launcher_recovery_selected = false;
+int prepare_local_launch(int players,int display,int layout,int integer_scale,int audio_player,
+    int deadzone,const int* controllers,RecompLauncherCNetplayLaunch* out,char* error,size_t cap) {
+    auto fail=[&](const char* text){if(error && cap)std::snprintf(error,cap,"%s",text);return 0;};
+    if(players<1 || players>4 || display<-1 || layout<0 || layout>2 || !out || !controllers || deadzone<1000 || deadzone>30000)
+        return fail("Revisa las opciones de multijugador local.");
+    for(int i=0;i<players;++i) {
+        if(controllers[i]<-1 || controllers[i]>31) return fail("El mando debe ser -1 (teclado) o un indice entre 0 y 31.");
+        for(int j=0;j<i;++j) if(controllers[i]>=0 && controllers[i]==controllers[j]) return fail("Asigna un mando diferente a cada jugador.");
+    }
+    local_multiplayer_options.players=players; local_multiplayer_options.display=display;
+    local_multiplayer_options.layout=layout; local_multiplayer_options.integer_scale=integer_scale!=0;
+    local_multiplayer_options.audio_player=audio_player; local_multiplayer_options.deadzone=deadzone;
+    for(int i=0;i<4;++i)local_multiplayer_options.controllers[i]=controllers[i];
+    *out={}; out->enabled=1; out->max_slots=4; out->player_count=players<2?2:players;
+    out->input_delay=6; out->input_prediction=6;
+    out->occupied_mask=(1u<<out->player_count)-1; out->session_id=1; out->input_player=-1; out->slot_port_valid=1;
+    for(int i=0;i<out->player_count;++i)out->slot_port[i]=i;
+    std::snprintf(out->bind_hostport,sizeof(out->bind_hostport),"127.0.0.1:19799");
+    launcher_local_selected=true; launcher_recovery_selected=false;
+    if(error && cap)error[0]=0;
+    return 1;
+}
 int prepare_recovery_launch(int players, int seat, uint32_t session, int port,
     const char* host, RecompLauncherCNetplayLaunch* out, char* error, size_t cap) {
     auto fail = [&](const char* why) { if (error && cap) std::snprintf(error, cap, "%s", why); return 0; };
@@ -60,6 +83,7 @@ int prepare_recovery_launch(int players, int seat, uint32_t session, int port,
     for (int i = 0; i < players; ++i) out->slot_port[i] = i;
     std::snprintf(out->bind_hostport, sizeof(out->bind_hostport), "0.0.0.0:%d", port);
     if (seat) std::snprintf(out->peer_hostport, sizeof(out->peer_hostport), "%s:%d", address.c_str(), port);
+    launcher_local_selected = false;
     launcher_recovery_selected = true;
     if (error && cap) error[0] = 0;
     return 1;
@@ -67,5 +91,6 @@ int prepare_recovery_launch(int players, int seat, uint32_t session, int port,
 void configure_launcher_profile(RecompLauncherCGameInfo& info) {
     info.experimental_netplay_label = "Netplay (experimental)";
     info.experimental_netplay_prepare = &prepare_recovery_launch;
+    info.local_multiplayer_prepare = &prepare_local_launch;
 }
 }

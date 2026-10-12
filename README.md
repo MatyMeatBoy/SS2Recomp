@@ -21,6 +21,7 @@ gbarecomp, with adaptive widescreen and linked GBA multiplayer for 2–4 players
 | Adaptive widescreen | Real authored field maps, starting at 284×160; no stretching |
 | Map transitions | Expanded scenery follows the game's scene-transition masks |
 | Sprite placement | Right-margin coordinates preserved across X=255/256 |
+| Local multiplayer | Launcher-integrated 1–4 windows, shared cable, separate saves and controllers |
 | Recoverable LAN netplay | Experimental, 2–4 players; can wait for network confirmations |
 | Discord-linked lobby / ICE | Two local processes tested through the real lobby; external-home gameplay remains unverified |
 | Predictive recoverable netplay | Developer opt-in; short native local delay/reconnect tests passed, sustained gameplay unqualified |
@@ -53,6 +54,13 @@ or ROM-derived generated code. Supply your own compatible files. Source builds
 also recognize `roms/shining_soul_2_europe.gba` and `gbarecomp/bios/gba_bios.bin`.
 
 ## Multiplayer
+
+Use **Multijugador local** in the launcher for 1–4 windows on the same PC.
+Choose the monitor, automatic/row/column layout, controller indices, stick deadzone,
+integer scaling and the player supplying audio. Automatic placement prefers the
+second monitor and uses a 2×2 grid for four players. Each window uses RAW colors
+and adaptive rendering without stretching. Enter the game's multiplayer menu in
+each window to form the party. See [local multiplayer](docs/LOCAL_MULTIPLAYER.md).
 
 **Netplay (experimental)** is the integrated direct-TCP recovery profile. Choose
 2–4 participants and one host. Guests select distinct seats and enter the host's

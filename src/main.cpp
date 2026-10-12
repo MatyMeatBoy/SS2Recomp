@@ -17,6 +17,7 @@
 #include "ss2_netplay_policy.h"
 #if defined(_WIN32)
 #include "ss2_recovery_runner.h"
+#include "ss2_local_multiplayer.h"
 #endif
 #include "multiplayer_session.h"
 #include "gba_netplay_build_identity.h"
@@ -42,6 +43,13 @@ int safe_netplay_run(const gbarecomp::GbaNetplayLaunch& requested, const gbareco
 }
 
 int selected_netplay_run(const gbarecomp::GbaNetplayLaunch& launch, const gbarecomp::GbaNetplayBoot& boot) {
+#if defined(_WIN32)
+    if(ss2::launcher_local_selected) {
+        if(boot.finish_tick && std::getenv("SS2_LOCAL_TEST") && std::getenv("LNG_TEST_HIDDEN"))
+            _putenv_s("SDL_VIDEODRIVER","dummy");
+        return ss2::run_local_multiplayer(launch,boot);
+    }
+#endif
 #if defined(_WIN32)
     if (boot.finish_tick && std::getenv("SS2_RECOVERY_TEST") && std::getenv("LNG_TEST_HIDDEN"))
         _putenv_s("SDL_VIDEODRIVER", "dummy");
