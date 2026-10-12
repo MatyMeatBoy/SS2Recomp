@@ -117,6 +117,15 @@ if(SS2_BUILD_LINK_PROBE)
         gbarecomp_runtime gbarecomp_debug gbarecomp_gba gbarecomp_armv4t
         gbarecomp_netplay "-Wl,--end-group")
     target_link_options(SS2LinkProbe PRIVATE "-Wl,--stack,16777216")
+    add_executable(SS2SceneProbe re/scene_probe.cpp src/ss2_extended_view.cpp ${_probe_objects})
+    add_dependencies(SS2SceneProbe ShiningSoul2Recomp)
+    target_include_directories(SS2SceneProbe PRIVATE
+        "${GBARECOMP_ROOT}/src/armv4t" "${GBARECOMP_ROOT}/src/gba"
+        "${GBARECOMP_ROOT}/src/runtime" src)
+    target_link_libraries(SS2SceneProbe PRIVATE "-Wl,--start-group"
+        gbarecomp_runtime gbarecomp_debug gbarecomp_gba gbarecomp_armv4t
+        gbarecomp_netplay "-Wl,--end-group")
+    target_link_options(SS2SceneProbe PRIVATE "-Wl,--stack,16777216")
 endif()
 if(GBARECOMP_NETPLAY)
     if(WIN32)
@@ -160,6 +169,9 @@ if(GBAGAME_RECOMP_UI)
         target_link_libraries(game_launcher_ui PUBLIC opengl32)
     endif()
     target_link_libraries(ShiningSoul2Recomp PRIVATE game_launcher_ui)
+    if(TARGET SS2SceneProbe)
+        target_link_libraries(SS2SceneProbe PRIVATE game_launcher_ui)
+    endif()
     recomp_stage_launcher_assets(ShiningSoul2Recomp CONSOLE gba
         BOXART ${CMAKE_CURRENT_SOURCE_DIR}/recomp/launcher/boxart.tga)
     set_property(SOURCE src/main.cpp APPEND PROPERTY

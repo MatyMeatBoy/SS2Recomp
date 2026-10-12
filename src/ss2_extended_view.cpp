@@ -195,6 +195,25 @@ int score_camera(gba::GbaBus* bus, const std::uint8_t* io, int bg,
 bool resolve_camera(gba::GbaBus* bus, const std::uint8_t* io, int bg, Layer& layer) {
     const int hofs = read16(io, 0x10u + static_cast<std::uint32_t>(bg * 4)) & 0xFF;
     const int vofs = read16(io, 0x12u + static_cast<std::uint32_t>(bg * 4)) & 0xFF;
+    // sub_08009594 writes scroll + global offset + per-layer offset to the
+    // hardware registers. Prefer that full coordinate over an ambiguous match
+    // in a repeated tile pattern, but only while it agrees with the live ring.
+    const auto* ram = bus->iwram_ptr();
+    const auto desc = 0x3188u + static_cast<unsigned>(bg - 1) * kLayerStride;
+    const int cx = static_cast<std::int16_t>(read16(ram, 0x31EC)) +
+                   static_cast<std::int16_t>(read16(ram, 0x31F4)) +
+                   static_cast<std::int16_t>(read16(ram, desc + 4));
+    const int cy = static_cast<std::int16_t>(read16(ram, 0x31EE)) +
+                   static_cast<std::int16_t>(read16(ram, 0x31F6)) +
+                   static_cast<std::int16_t>(read16(ram, desc + 6));
+    if ((cx & 255) == hofs && (cy & 255) == vofs) {
+        int total = 0;
+        const int score = score_camera(bus, io, bg, layer, cx, cy, &total);
+        if (total >= 16 && score * 4 >= total * 3) {
+            layer.camera_x = cx; layer.camera_y = cy;
+            return true;
+        }
+    }
     int best = -1;
     int best_total = 0;
     for (int cy = vofs; cy < layer.height * 8; cy += 256) {
@@ -317,11 +336,37 @@ int hud_obj_x_provider(int, std::uint16_t attr0, std::uint16_t attr1,
     gba::GbaBus* bus = gbarecomp::active_bus();
     if (!out_x || !bus || !current_frame(bus).field) return 0;
     const int y = attr0 & 0x00FF;
-    if (((attr2 >> 10) & 3) != 0 || y >= 48 || (attr0 & 0x0300u) == 0x0200u) return 0;
     int x = attr1 & 0x01FF;
-    if (x & 0x0100) x -= 0x0200;
+    // The game's OBJ emitters accept world X in [-64, 240]. A constituent
+    // sprite can extend to X=304; 256..304 is right of the viewport, whereas
+    // 448..511 encodes negative X. Signed 9-bit decoding incorrectly wraps
+    // visible right-margin sprites at 256.
+    if (x >= 384) x -= 512;
+    if (((attr2 >> 10) & 3) != 0 || y >= 48 || (attr0 & 0x0300u) == 0x0200u) {
+        *out_x = x;
+        return 1;
+    }
     *out_x = x < 120 ? x - static_cast<int>(g_ws_extra_left)
                      : x + static_cast<int>(g_ws_extra_right);
+    return 1;
+}
+
+int transition_window_provider(const std::uint8_t* io, int hw_x, int y,
+                               std::uint16_t* out_mask) {
+    // SS2 closes scenes using WIN0 (inside=0, outside=all layers), not by
+    // fading only the palette. Continue that mask to the expanded edges.
+    // Use the PPU's scanline IO snapshot: the guest may update it mid-frame.
+    const auto dispcnt = read16(io, 0);
+    const auto inside = read16(io, 0x48) & 0x3Fu;
+    const auto outside = read16(io, 0x4A) & 0x3Fu;
+    if (!(dispcnt & 0x2000u) || inside != 0 || outside != 0x3Fu) return 0;
+    const auto h = read16(io, 0x40), v = read16(io, 0x44);
+    const int left = h >> 8, right = h & 255;
+    const int top = v >> 8, bottom = v & 255;
+    const int edge = hw_x < 0 ? 0 : 239;
+    const bool vertical = top <= bottom ? y >= top && y < bottom : y >= top || y < bottom;
+    const bool horizontal = left <= right ? edge >= left && edge < right : edge >= left || edge < right;
+    *out_mask = vertical && horizontal ? inside : outside;
     return 1;
 }
 
@@ -369,6 +414,7 @@ void install_extended_view(std::uint32_t, std::uint32_t) {
     gba::g_ws_bg_x_provider = &hud_bg_x_provider;
     gba::g_ws_bg_x_provider_layers = 1u << 0;
     gba::g_ws_obj_attr_x_provider = &hud_obj_x_provider;
+    gba::g_ws_margin_window_provider = &transition_window_provider;
     gba::g_ws_authored_margin_layers = 1;
     gba::g_ws_pillarbox = 1;
     gba::g_ws_pillarbox_left = 0;

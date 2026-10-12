@@ -1,0 +1,23 @@
+{
+  "frames": 720,
+  "viewport": [
+    284,
+    160
+  ],
+  "state_mismatches": 0,
+  "native_pixel_mismatches": 0,
+  "closed_window_leak_frames_before": 32,
+  "closed_window_leak_frames_after": 0,
+  "rom_sha1": "aa1288be9257337abdfe3034898cf6c7aa778fbc",
+  "decomp_reference_commit": "70497b6fc1f81b657105c3135f1215dc87db2273",
+  "executable_sha256": "8469726726245b2ac6b9d2a288edb6d38c22c83f344c9a801d5bdc3cb4452e57",
+  "coverage": "FULLY_STATIC; dispatch_misses=0 on this route",
+  "scene_probe": "PASS: OBJ X=256, negative wrap, closed transition BG+OBJ",
+  "widescreen_regressions": [
+    "left:PASS",
+    "right:PASS",
+    "state1:PASS",
+    "state2:PASS",
+    "state3:PASS"
+  ]
+}

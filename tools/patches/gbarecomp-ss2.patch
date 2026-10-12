@@ -24,6 +24,70 @@ index 3d07d55..a72829d 100644
              runtime_trace_dump_recent(160);
              break;
          }
+diff --git a/src/gba/gba_ppu.cpp b/src/gba/gba_ppu.cpp
+index 8e06758..d4ff0a0 100644
+--- a/src/gba/gba_ppu.cpp
++++ b/src/gba/gba_ppu.cpp
+@@ -29,6 +29,8 @@ extern "C" unsigned g_ws_bg_xy_provider_layers = 0xFu;
+ extern "C" int g_ws_affine_filter_enabled = 0;
+ extern "C" int (*g_ws_affine_filter_provider)(int, int) = nullptr;
+ extern "C" int g_ws_authored_margin_layers = 0;
++extern "C" int (*g_ws_margin_window_provider)(const std::uint8_t*, int, int,
++                                               std::uint16_t*) = nullptr;
+ extern "C" int g_ws_native_view_left = -1;
+ 
+ // Widescreen pillarbox (Step C policy): when nonzero, the wide path renders the
+@@ -1498,8 +1500,16 @@ void render_scanline_wide(uint8_t* rgb, int y, uint16_t dispcnt,
+     const bool black_nonuniform_window_margins =
+         g_ws_tilemap_provider && any_window && !window_control_is_uniform &&
+         !g_ws_authored_margin_layers;
++    bool margin_window_override[GbaPpu::kMaxRenderWidth] = {};
+     auto window_control = [&](uint32_t x) -> uint16_t {
+         int hx = static_cast<int>(x) - static_cast<int>(ox);
++        if (g_ws_margin_window_provider && (hx < 0 || hx >= static_cast<int>(kVanW))) {
++            std::uint16_t mask = 0;
++            if (g_ws_margin_window_provider(io, hx, y, &mask)) {
++                margin_window_override[x] = true;
++                return mask & 0x3Fu;
++            }
++        }
+         if (g_ws_tilemap_provider &&
+             (hx < 0 || hx >= static_cast<int>(kVanW))) {
+             // Minish's room provider treats expanded columns as lying outside
+@@ -1588,7 +1598,7 @@ void render_scanline_wide(uint8_t* rgb, int y, uint16_t dispcnt,
+         uint32_t block_cols = width_tiles / 32u;
+         for (uint32_t x = 0; x < out_w; ++x) {
+             int hx = static_cast<int>(x) - static_cast<int>(ox);
+-            const bool authored_margin = g_ws_authored_margin_layers &&
++            const bool authored_margin = g_ws_authored_margin_layers && !margin_window_override[x] &&
+                 (!native_row || hx < 0 || hx >= static_cast<int>(kVanW));
+             // Minish supplies room-map entries for margins independently of
+             // the native 240px WIN0/WIN1 HUD/dialog masks. Ignore only their
+@@ -2111,7 +2121,8 @@ void render_scanline_wide(uint8_t* rgb, int y, uint16_t dispcnt,
+         // screens so menus/battles are letterboxed, not garbled.
+         const bool left_margin = x < ox;
+         const bool right_margin = x >= ox + 240u;
+-        if ((black_nonuniform_window_margins &&
++        if ((margin_window_override[x] && window_controls[x] == 0) ||
++            (black_nonuniform_window_margins &&
+              (left_margin || right_margin)) ||
+             (!palette_backdrop_only &&
+              ((g_ws_pillarbox && (left_margin || right_margin)) ||
+diff --git a/src/gba/gba_ppu.h b/src/gba/gba_ppu.h
+index 5c521b9..b1a81ac 100644
+--- a/src/gba/gba_ppu.h
++++ b/src/gba/gba_ppu.h
+@@ -263,6 +263,10 @@ extern "C" int (*g_ws_affine_filter_provider)(int bg, int screen_y);
+ // established fail-closed window/savestate behavior. On lets provider-sourced
+ // regular BG margins continue independently beside native HUD/dialog windows.
+ extern "C" int g_ws_authored_margin_layers;
++// Optional margin-only window policy. An explicit mask also overrides the
++// authored BG bypass, so scene transitions can hide BGs and OBJs together.
++extern "C" int (*g_ws_margin_window_provider)(const std::uint8_t* io, int hw_x,
++                                               int screen_y, std::uint16_t* mask);
+ // Host-only placement of native X=0 within an expanded canvas. Negative keeps
+ // the configured left margin; otherwise clamped to [0, render_width - 240].
+ // All BG, OBJ, window and authored-margin coordinates share this origin.
 diff --git a/src/runtime/launcher_netplay_seam.h b/src/runtime/launcher_netplay_seam.h
 index 15b20e6..73d5d4d 100644
 --- a/src/runtime/launcher_netplay_seam.h
@@ -309,6 +373,18 @@ index 0000000..a281be4
 +        OverlayAlign::Center, OverlaySpace::View);
 +}
 +}
+diff --git a/src/runtime/runtime.cpp b/src/runtime/runtime.cpp
+index 9d30f74..be8fe9c 100644
+--- a/src/runtime/runtime.cpp
++++ b/src/runtime/runtime.cpp
+@@ -1288,6 +1288,7 @@ int run_game(int argc, char** argv, const RunOptions& opts) {
+     gba::g_rom_read16_override = nullptr;
+     gba::g_rom_read32_override = nullptr;
+     gba::g_ws_tilemap_provider = nullptr;
++    gba::g_ws_margin_window_provider = nullptr;
+     gba::g_ws_obj_x_provider = nullptr;
+     gba::g_ws_obj_attr_x_provider = nullptr;
+     gba::g_ws_obj_native_clip = 0;
 diff --git a/src/runtime/runtime_bus_bridge.cpp b/src/runtime/runtime_bus_bridge.cpp
 index 044fc13..d44b807 100644
 --- a/src/runtime/runtime_bus_bridge.cpp
