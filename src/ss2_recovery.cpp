@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <fstream>
 #include <io.h>
+#include <map>
 #include <stdexcept>
 #include <utility>
 #ifndef WIN32_LEAN_AND_MEAN
@@ -39,7 +40,10 @@ enum Type : std::uint32_t {
     Pong,
     End,
     EndAck,
-    Rejected
+    Rejected,
+    StreamInput,
+    StreamFrame,
+    StreamHash
 };
 void put(RecoveryBytes &b, std::uint32_t x) {
     for (unsigned i = 0; i < 4; ++i)
@@ -179,6 +183,7 @@ struct Connection {
     RecoveryBytes rx, tx;
     std::size_t sent = 0;
     int seat = -1;
+    std::uint32_t verified = 0;
     bool connecting = false, ready = false, input = false, ack = false, ended = false;
     Clock::time_point heard = Clock::now(), ping = Clock::now();
     Connection() = default;
@@ -292,7 +297,7 @@ struct Connection {
         p.epoch = r.word();
         p.tick = r.word();
         auto length = r.word();
-        if (type < Hello || type > Rejected || length > max_body)
+        if (type < Hello || type > StreamHash || length > max_body)
             throw std::runtime_error("invalid recovery frame");
         if (rx.size() < 24 + length)
             return false;
@@ -331,6 +336,40 @@ struct RecoveryRoom::Impl {
     unsigned repairs = 0;
     Clock::time_point retry = Clock::now(), phase_started = Clock::now();
     std::filesystem::path checkpoint, journal, meta;
+    struct InputRow {
+        std::array<std::uint16_t, 4> keys{};
+        unsigned mask = 0;
+    };
+    std::map<std::uint32_t, InputRow> future_inputs;
+    std::map<std::uint32_t, Digest> recent_hashes;
+    void restore_committed() {
+        callbacks.restore(committed);
+        if (callbacks.synchronized) callbacks.synchronized(tick);
+    }
+    bool ready() const {
+        return initialized && !ending && !done &&
+            (config.seat == 0 ? all(&Connection::ready) :
+             !links.empty() && links[0]->ready);
+    }
+    void accept_input(unsigned seat, std::uint32_t frame, std::uint16_t buttons) {
+        if (frame < tick) return;
+        if (frame - tick >= 128 || buttons > 1023)
+            throw std::runtime_error("input outside bounded streaming window");
+        auto &row = future_inputs[frame];
+        if ((row.mask & (1u << seat)) && row.keys[seat] != buttons)
+            throw std::runtime_error("local input changed after submission");
+        row.mask |= 1u << seat;
+        row.keys[seat] = buttons;
+    }
+    void submit_input(std::uint32_t frame, std::uint16_t buttons) {
+        if (!config.streaming || !ready()) return;
+        if (!config.seat) accept_input(0, frame, buttons);
+        else {
+            RecoveryBytes body;
+            put(body, buttons);
+            links[0]->queue(StreamInput, epoch, frame, body);
+        }
+    }
     Impl(RecoveryConfig c, RecoveryCallbacks cb) : config(std::move(c)), callbacks(std::move(cb)) {
         if (config.players < 2 || config.players > 4 || config.seat >= config.players ||
             !config.session || config.identity.empty() || config.identity.size() > 2048)
@@ -440,7 +479,7 @@ struct RecoveryRoom::Impl {
         r.done();
         if (digest(committed) != committed_hash)
             throw std::runtime_error("corrupt recovery checkpoint");
-        callbacks.restore(committed);
+        restore_committed();
         initialized = true;
         if (std::filesystem::exists(journal)) {
             auto rows = read_file(journal, 1024 * 1024);
@@ -476,7 +515,7 @@ struct RecoveryRoom::Impl {
                 durable_write(journal, rows);
             }
         }
-        callbacks.restore(committed);
+        restore_committed();
     }
     void persist_commit() {
         RecoveryBytes row;
@@ -503,7 +542,9 @@ struct RecoveryRoom::Impl {
     void synchronize() {
         if (!initialized)
             return;
-        callbacks.restore(committed);
+        restore_committed();
+        future_inputs.clear();
+        recent_hashes.clear();
         candidate.clear();
         awaiting_input = false;
         awaiting_ack = false;
@@ -517,6 +558,7 @@ struct RecoveryRoom::Impl {
             if (seats[s]) {
                 auto &p = *seats[s];
                 p.ready = p.input = p.ack = p.ended = false;
+                p.verified = tick;
                 // Drop unsent messages from the previous generation only after a
                 // connection loss? Keep framing intact: queued old frames are
                 // ignored by epoch, and State always follows complete frames.
@@ -594,6 +636,29 @@ struct RecoveryRoom::Impl {
             if (p.tick != tick || hash != committed_hash)
                 throw std::runtime_error("recovery ready digest mismatch");
             c.ready = true;
+            c.verified = tick;
+        } else if (p.type == StreamInput && config.streaming && c.ready) {
+            auto buttons = r.word();
+            r.done();
+            if (buttons > 1023) throw std::runtime_error("invalid streaming buttons");
+            accept_input(c.seat, p.tick, static_cast<std::uint16_t>(buttons));
+        } else if (p.type == StreamHash && config.streaming && c.ready) {
+            auto hash = r.digest();
+            r.done();
+            auto expected = recent_hashes.find(p.tick);
+            if (p.tick <= c.verified) return;
+            if (expected == recent_hashes.end())
+                throw std::runtime_error("streaming acknowledgement outside history");
+            if (hash != expected->second) {
+                std::fprintf(stderr, "recovery divergence seat=%d tick=%u; restoring host state\n", c.seat, p.tick);
+                if (++repairs > 3) {
+                    fatal_error = "persistent streaming state divergence";
+                    throw std::runtime_error(fatal_error);
+                }
+                synchronize();
+                return;
+            }
+            c.verified = p.tick;
         } else if (p.type == Input && awaiting_input) {
             auto buttons = r.word();
             r.done();
@@ -639,10 +704,10 @@ struct RecoveryRoom::Impl {
             r.done();
             if (digest(state) != hash)
                 throw std::runtime_error("invalid recovery state digest");
-            callbacks.restore(state);
             committed = std::move(state);
             committed_hash = hash;
             tick = p.tick;
+            restore_committed();
             epoch = p.epoch;
             initialized = true;
             c.ready = true;
@@ -656,7 +721,31 @@ struct RecoveryRoom::Impl {
         }
         if (!c.ready || p.epoch != epoch)
             return false;
-        if (p.type == AskInput) {
+        if (p.type == StreamFrame && config.streaming) {
+            if (p.tick != tick + 1) throw std::runtime_error("streaming frame gap");
+            for (unsigned s = 0; s < config.players; ++s) {
+                auto key = r.word();
+                if (key > 1023) throw std::runtime_error("invalid streaming input");
+                inputs[s] = static_cast<std::uint16_t>(key);
+            }
+            auto expected = r.digest();
+            r.done();
+            callbacks.advance({inputs.data(), config.players});
+            auto state = callbacks.capture();
+            auto hash = digest(state);
+            RecoveryBytes body;
+            append_digest(body, hash);
+            c.queue(StreamHash, epoch, p.tick, body);
+            if (hash != expected) {
+                c.ready = false;
+                restore_committed();
+                return false;
+            }
+            committed = std::move(state);
+            committed_hash = hash;
+            tick = p.tick;
+            return true;
+        } else if (p.type == AskInput) {
             r.done();
             if (p.tick != tick || !candidate.empty())
                 throw std::runtime_error("invalid recovery input request");
@@ -745,10 +834,35 @@ struct RecoveryRoom::Impl {
             }
             if (config.finish_tick && tick >= config.finish_tick && !awaiting_ack &&
                 !awaiting_input) {
+                if (config.streaming)
+                    for (unsigned s = 1; s < config.players; ++s)
+                        if (seats[s]->verified < tick) return false;
                 save_checkpoint();
                 broadcast(End);
                 ending = true;
                 return false;
+            }
+            if (config.streaming) {
+                auto it = future_inputs.find(tick);
+                if (it == future_inputs.end() || it->second.mask != (1u << config.players) - 1)
+                    return false;
+                // Bound outstanding verification independently of prediction.
+                for (unsigned s = 1; s < config.players; ++s)
+                    if (tick - seats[s]->verified >= 120) return false;
+                inputs = it->second.keys;
+                future_inputs.erase(it);
+                callbacks.advance({inputs.data(), config.players});
+                committed = callbacks.capture();
+                committed_hash = digest(committed);
+                ++tick;
+                recent_hashes[tick] = committed_hash;
+                while (recent_hashes.size() > 128) recent_hashes.erase(recent_hashes.begin());
+                persist_commit();
+                RecoveryBytes body;
+                for (unsigned s = 0; s < config.players; ++s) put(body, inputs[s]);
+                append_digest(body, committed_hash);
+                broadcast(StreamFrame, body);
+                return true;
             }
             if (awaiting_input && all(&Connection::input)) {
                 RecoveryBytes row;
@@ -818,7 +932,7 @@ struct RecoveryRoom::Impl {
             auto &c = *links[0];
             if (!c.pump()) {
                 if (initialized)
-                    callbacks.restore(committed);
+                    restore_committed();
                 candidate.clear();
                 links.clear();
                 ending = false;
@@ -862,6 +976,10 @@ RecoveryRoom::RecoveryRoom(RecoveryConfig c, RecoveryCallbacks callbacks)
 RecoveryRoom::~RecoveryRoom() = default;
 bool RecoveryRoom::poll(std::uint16_t b, bool allow) { return impl_->poll(b, allow); }
 std::uint32_t RecoveryRoom::tick() const { return impl_->tick; }
+bool RecoveryRoom::ready() const { return impl_->ready(); }
+void RecoveryRoom::submit_input(std::uint32_t tick, std::uint16_t buttons) {
+    impl_->submit_input(tick, buttons);
+}
 bool RecoveryRoom::finished() const { return impl_->done; }
 std::string RecoveryRoom::status() const { return impl_->status(); }
 } // namespace ss2

@@ -33,9 +33,9 @@ int supervise_launcher_recovery(const gbarecomp::GbaNetplayLaunch& launch,
     const gbarecomp::GbaNetplayBoot& boot) {
 #if defined(_WIN32)
     gbarecomp::validate_gba_netplay_launch(launch);
-    auto root = boot.config_directory.parent_path();
+    auto root = boot.config_directory;
     auto script = root / "tools" / "run_recoverable.ps1";
-    if (!std::filesystem::exists(script)) {
+    for (unsigned parents=0; parents<2 && !std::filesystem::exists(script); ++parents) {
         root = root.parent_path();
         script = root / "tools" / "run_recoverable.ps1";
     }

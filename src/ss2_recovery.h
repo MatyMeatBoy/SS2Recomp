@@ -15,6 +15,7 @@ struct RecoveryConfig {
     std::uint32_t session = 0, finish_tick = 0;
     std::string bind, peer, identity;
     std::filesystem::path directory;
+    bool streaming = false;
 };
 // Guest-independent seam. Capture includes the entire deterministic system.
 // Restore must be atomic; render/audio state is never an authority for recovery.
@@ -26,6 +27,7 @@ struct RecoveryCallbacks {
     std::function<std::uint16_t(std::uint32_t)> sample_input;
     RecoveryBytes owner_save;
     std::function<void(unsigned, std::span<const std::uint8_t>)> install_owner;
+    std::function<void(std::uint32_t)> synchronized;
 };
 class RecoveryRoom {
   public:
@@ -36,6 +38,8 @@ class RecoveryRoom {
     // Nonblocking I/O. True means one frame became committed, not predicted.
     bool poll(std::uint16_t buttons, bool allow_frame);
     std::uint32_t tick() const;
+    bool ready() const;
+    void submit_input(std::uint32_t tick, std::uint16_t buttons);
     bool finished() const;
     std::string status() const;
 

@@ -6,7 +6,8 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $ss2Root = Split-Path -Parent $PSScriptRoot
-$ss2Exe = Join-Path $ss2Root 'build/ShiningSoul2Recomp.exe'
+$ss2Exe = Join-Path $ss2Root 'ShiningSoul2Recomp.exe'
+if (-not (Test-Path -LiteralPath $ss2Exe)) { $ss2Exe = Join-Path $ss2Root 'build/ShiningSoul2Recomp.exe' }
 if ($GameExecutable) { $ss2Exe = $GameExecutable }
 if (-not (Test-Path -LiteralPath $ss2Exe)) { throw 'No se encuentra ShiningSoul2Recomp.exe.' }
 # Windows argv quoting, including literal quotes and trailing backslashes.

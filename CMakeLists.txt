@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
-project(ShiningSoul2Recomp VERSION 0.2.2 LANGUAGES C CXX)
+project(ShiningSoul2Recomp VERSION 0.2.4 LANGUAGES C CXX)
 
 option(SS2_BUILD_LINK_PROBE "Build the headless scripted multiplayer qualification tool" OFF)
+option(SS2_BUILD_ONLINE_CORE_TEST "Build portable modern-online protocol and rollback tests" OFF)
+if(SS2_BUILD_ONLINE_CORE_TEST)
+    add_executable(SS2OnlineCoreTest re/online_core_test.cpp src/online/ss2_link_protocol.cpp)
+    target_include_directories(SS2OnlineCoreTest PRIVATE src)
+    target_compile_features(SS2OnlineCoreTest PRIVATE cxx_std_20)
+endif()
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
@@ -50,6 +56,7 @@ file(GLOB GAME_GENERATED_SOURCES CONFIGURE_DEPENDS
 add_executable(ShiningSoul2Recomp
     src/main.cpp
     src/ss2_extended_view.cpp
+    src/online/ss2_link_protocol.cpp
     src/mods/ss2_adaptive_view_plugin.cpp
     ${GAME_GENERATED_SOURCES})
 

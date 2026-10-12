@@ -6,6 +6,8 @@
 #include "multiplayer_session.h"
 #include "save_config.h"
 #include "ss2_recovery.h"
+#include "ss2_prediction.h"
+#include "online/ss2_link_protocol.h"
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -143,6 +145,11 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
         ~Detach() { s.input_machine(seat).ppu.set_presentation_observer(nullptr); }
     } detach{simulation, launch.local_seat};
     const bool cold = simulation.cycle() == 0;
+    const bool predictive=std::getenv("SS2_PREDICTIVE_ONLINE") &&
+        std::string(std::getenv("SS2_PREDICTIVE_ONLINE"))=="1";
+    std::array<online::MailboxAssembler,4> mailboxes={
+        online::MailboxAssembler(0),online::MailboxAssembler(1),
+        online::MailboxAssembler(2),online::MailboxAssembler(3)};
     RecoveryCallbacks callbacks;
     callbacks.capture = [&] { return simulation.save_state(); };
     callbacks.restore = [&](auto bytes) {
@@ -150,13 +157,27 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
         if (!simulation.load_state(bytes, &error))
             throw std::runtime_error("recovery restore: " + error);
         simulation.discard_audio_output();
+        for (auto& mailbox : mailboxes) mailbox.reset();
         attach();
     };
     std::uint32_t qualification_frame = 0;
     bool corrupted = false;
+    // Decomp-backed observation seam. No guest buffer writes, acknowledgments
+    // or substitutions yet: complete events are measured before transport work.
+    const bool observe_link=std::getenv("SS2_ONLINE_LINK_TRACE")!=nullptr;
     callbacks.advance = [&](auto buttons) {
         simulation.discard_audio_output();
         simulation.run_frame(buttons);
+        if (observe_link) {
+            const auto* ram=simulation.input_machine(launch.local_seat).bus.iwram_ptr();
+            for (unsigned peer=0;peer<launch.player_count;++peer) {
+                online::LinkBlock block;
+                std::copy_n(ram+(online::receive_address-0x03000000)+peer*24,24,block.begin());
+                if (auto message=mailboxes[peer].observe(block))
+                    std::printf("online link-event seat=%u peer=%u tag=%02x bytes=%zu\n",
+                        launch.local_seat,peer,message->tag,message->payload.size());
+            }
+        }
         ++qualification_frame;
         if (testing && !corrupted)
             if (const char *at = std::getenv("SS2_RECOVERY_CORRUPT_AT"))
@@ -179,18 +200,28 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
             return row[launch.local_seat];
         };
     callbacks.owner_save = save_bytes(simulation.input_machine(launch.local_seat).bus.save());
+    std::unique_ptr<PredictionTimeline> prediction;
     callbacks.install_owner = [&](unsigned seat, auto bytes) {
         if (cold)
             load_save(simulation.input_machine(seat).bus.save(), bytes);
+        if (prediction) prediction->restore(simulation.save_state());
     };
+    if (predictive) {
+        prediction=std::make_unique<PredictionTimeline>(launch.player_count,launch.local_seat,callbacks);
+        callbacks.capture=[&]{return prediction->capture();};
+        callbacks.restore=[&](auto bytes){prediction->restore(bytes);};
+        callbacks.advance=[&](auto row){prediction->confirm(row);};
+        callbacks.synchronized=[&](auto tick){prediction->synchronize(tick);};
+    }
     RecoveryConfig room_config;
+    room_config.streaming=predictive;
     room_config.players = launch.player_count;
     room_config.seat = launch.local_seat;
     room_config.session = launch.session_id;
     room_config.finish_tick = boot.finish_tick;
     room_config.bind = launch.bind_endpoint;
     room_config.peer = launch.peer_endpoint;
-    room_config.identity = "ss2-recovery/1:" + launch.program_id + ":" + launch.build_identity +
+    room_config.identity = std::string(predictive ? "ss2-recovery/2-predictive:" : "ss2-recovery/1:") + launch.program_id + ":" + launch.build_identity +
                            ":" + boot.expected_rom_sha1 + ":" + boot.bios->sha1_hex() + ":" +
                            std::to_string(static_cast<unsigned>(boot.save.type)) + ":" +
                            std::to_string(boot.save.size) + ":" +
@@ -199,6 +230,7 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
     room_config.directory = boot.config_directory / "netplay" / "recovery" /
                             ("room-" + std::to_string(launch.session_id)) /
                             ("seat-" + std::to_string(launch.local_seat));
+    if (predictive) room_config.directory /= "predictive-v2";
     if (testing)
         if (const char *path = std::getenv("SS2_RECOVERY_DIRECTORY"))
             room_config.directory = path;
@@ -240,16 +272,35 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
         if (!script.empty()) {
             std::array<std::uint16_t, 4> row{};
             for (auto &entry : script) {
-                if (entry.first > room.tick())
+                if (entry.first > (prediction ? prediction->tip() : room.tick()))
                     break;
                 row = entry.second;
             }
             buttons = row[launch.local_seat];
         }
         auto now = GbaNetplayPacer::Clock::now();
-        bool advanced = room.poll(buttons, pacer.ready(now));
-        if (advanced) {
-            pacer.forwarded(now);
+        bool advanced = room.poll(buttons, prediction ? true : pacer.ready(now));
+        bool presented = advanced;
+        if (prediction) {
+            // Replay consumes no new pacing slot or network input. Keep each
+            // UI/network pump bounded; never play audio from replayed frames.
+            presented=false;
+            const auto replay_deadline=GbaNetplayPacer::Clock::now()+std::chrono::milliseconds(4);
+            while (room.ready() && prediction->replay_pending() &&
+                   GbaNetplayPacer::Clock::now()<replay_deadline)
+                prediction->replay_step();
+            simulation.discard_audio_output();
+            if (room.ready() && prediction->can_predict() && pacer.ready(now) &&
+                (!boot.finish_tick || prediction->tip()<boot.finish_tick)) {
+                const auto frame=prediction->tip();
+                room.submit_input(frame,buttons);
+                prediction->predict(buttons);
+                pacer.forwarded(now);
+                presented=true;
+            }
+        }
+        if (presented) {
+            if (!prediction) pacer.forwarded(now);
             if (auto *pixels = presentation.pixels()) {
                 auto w = presentation.width();
                 if (!window.set_surface_size(w, 160))
@@ -295,12 +346,17 @@ int run_recoverable_netplay(const gbarecomp::GbaNetplayLaunch &launch,
                             TerminateProcess(GetCurrentProcess(), 0xc0000005u);
                         }
                     }
-        if (!advanced)
+        if (!presented)
             pacer.idle();
     }
+    if (prediction)
+        std::printf("online prediction forwards=%llu replays=%llu corrections=%llu history_bytes=%zu\n",
+            static_cast<unsigned long long>(prediction->forwards),
+            static_cast<unsigned long long>(prediction->replays),
+            static_cast<unsigned long long>(prediction->corrections),prediction->history_bytes());
     if (testing)
         if (const char *path = std::getenv("SS2_RECOVERY_STATE_OUT")) {
-            auto b = simulation.save_state();
+            auto b = prediction ? prediction->capture() : simulation.save_state();
             std::ofstream f(path, std::ios::binary);
             if (!f.write(reinterpret_cast<char *>(b.data()), b.size()))
                 throw std::runtime_error("cannot write qualification state");

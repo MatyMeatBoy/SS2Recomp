@@ -23,17 +23,18 @@ gbarecomp, with adaptive widescreen and linked GBA multiplayer for 2–4 players
 | Sprite placement | Right-margin coordinates preserved across X=255/256 |
 | Recoverable LAN netplay | Experimental, 2–4 players; can wait for network confirmations |
 | Discord-linked lobby / ICE | Two local processes tested through the real lobby; external-home gameplay remains unverified |
-| Predictive recoverable netplay | Work in progress; not enabled or qualified yet |
-| Published Windows release | [v0.2.3](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.3) |
+| Predictive recoverable netplay | Developer opt-in; short native local delay/reconnect tests passed, sustained gameplay unqualified |
+| Published Windows release | [v0.2.4](https://github.com/MatyMeatBoy/SS2Recomp/releases/tag/v0.2.4) |
 
 See [architecture](docs/ARCHITECTURE.md), [network validation](docs/NETPLAY_VALIDATION.md),
 and [scene-transition validation](docs/SCENE_TRANSITIONS.md), plus the
 [field-margin regression](docs/FIELD_MARGIN_FIX.md).
+See [decomp-backed online development](docs/MODERN_ONLINE.md) for the new backend and its limits.
 
 ## Windows quick start
 
-1. Download and extract the complete release ZIP, preserving `build` and `tools`.
-2. Open `build/ShiningSoul2Recomp.exe`, or the included `Jugar ShiningSoul2Recomp.bat`.
+1. Download and extract the complete release ZIP, preserving its folders.
+2. Open `ShiningSoul2Recomp.exe` at the package root. No BAT is needed.
 3. Select your own ROM and BIOS in the launcher.
 4. Use the Mods tab to enable adaptive widescreen. This includes the mirrored
    equipment backdrop; interactive cells and cursor stay centered.

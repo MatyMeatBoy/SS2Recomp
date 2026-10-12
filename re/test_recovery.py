@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser()
 p.add_argument('--native',action='store_true')
+p.add_argument('--predictive',action='store_true',help='Qualify the development streaming/prediction backend')
 p.add_argument('--launcher',action='store_true',help='Exercise the hidden experimental launcher and its supervisor')
 p.add_argument('--executable',type=Path,help='Qualify an extracted release executable')
 p.add_argument('--players',type=int,choices=[2,3,4],default=2)
@@ -12,10 +13,12 @@ p.add_argument('--fault',choices=['none','guest','host','network','desync','watc
 p.add_argument('--frames',type=int,default=180)
 p.add_argument('--at',type=int,default=60)
 p.add_argument('--cut-seconds',type=float,default=12)
+p.add_argument('--delay-ms',type=float,default=0,help='Added one-way TCP proxy delay for input/recovery qualification')
 p.add_argument('--initial-state',type=Path)
 p.add_argument('--inputs',type=Path)
 p.add_argument('--timeout',type=float,default=120)
 a=p.parse_args()
+if a.predictive and not a.native:p.error('Predictive qualification requires --native')
 if a.fault=='watchdog' and not a.native:p.error('Watchdog qualification requires --native')
 if a.launcher and (not a.native or a.fault not in ('none','desync','network','watchdog')):p.error('Launcher tests require native; abrupt parent termination is unsupported')
 if a.fault!='none' and a.frames<=a.at+30:p.error('Fault tests need frames > at + 30')
@@ -26,9 +29,11 @@ exe=ROOT/'build/netplay-testing'/('ShiningSoul2Recomp.exe' if a.native else 'SS2
 if a.executable:exe=a.executable.resolve()
 port=22170; proxyport=22180
 env=dict(os.environ,SDL_VIDEODRIVER='dummy',SDL_AUDIODRIVER='dummy',SDL_RENDER_DRIVER='software')
+if a.predictive:env.update(SS2_PREDICTIVE_ONLINE='1',SS2_ONLINE_LINK_TRACE='1')
 processes={};logs=[];commands={};peer_envs={};restart_count=0
 selector=selectors.DefaultSelector();listener=None;pairs={};pending={};wire_bytes=0
 blocked_until=0.;faulted=False;started=time.monotonic()
+send_after={}
 
 def launch(seat):
     f=(out/f'peer{seat}.log').open('ab');logs.append(f)
@@ -51,12 +56,12 @@ def progress(seat):
     return max(map(int,matches),default=0)
 
 try:
-    if a.fault=='network':
+    if a.fault=='network' or a.delay_ms:
         listener=socket.socket();listener.bind(('127.0.0.1',proxyport));listener.listen();listener.setblocking(False)
         selector.register(listener,selectors.EVENT_READ)
     for seat in range(a.players):
         directory=out/f'seat{seat}';directory.mkdir()
-        endpoint=f'127.0.0.1:{proxyport if a.fault=="network" else port}'
+        endpoint=f'127.0.0.1:{proxyport if listener else port}'
         if a.native:
             commands[seat]=[str(exe),'--no-launcher','--bios',str(ROOT/'build/gba_bios.bin'),
                 '--rom',str(ROOT/'roms/shining_soul_2_europe.gba'),'--volume','0','--scale','1',
@@ -111,7 +116,7 @@ try:
                 pairs[client]=upstream;pairs[upstream]=client
             else:
                 if s not in pairs:continue
-                if mask&selectors.EVENT_WRITE and pending[s]:
+                if mask&selectors.EVENT_WRITE and pending[s] and time.monotonic()>=send_after.get(s,0):
                     try:n=s.send(pending[s])
                     except BlockingIOError:n=0
                     except OSError:close_pair(s);continue
@@ -122,7 +127,9 @@ try:
                     except BlockingIOError:continue
                     except OSError:close_pair(s);continue
                     if not data:close_pair(s);continue
-                    wire_bytes+=len(data);other=pairs[s];pending[other].extend(data);selector.modify(other,selectors.EVENT_READ|selectors.EVENT_WRITE)
+                    wire_bytes+=len(data);other=pairs[s]
+                    if not pending[other]:send_after[other]=time.monotonic()+a.delay_ms/1000
+                    pending[other].extend(data);selector.modify(other,selectors.EVENT_READ|selectors.EVENT_WRITE)
         codes=[processes[s].poll() for s in range(a.players)]
         if all(c is not None for c in codes):break
         if any(c not in (None,0) for c in codes):break

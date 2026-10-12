@@ -1,0 +1,111 @@
+{
+  "predictive_4_network": {
+    "settings": {
+      "native": true,
+      "predictive": true,
+      "launcher": false,
+      "executable": null,
+      "players": 4,
+      "fault": "network",
+      "frames": 180,
+      "at": 60,
+      "cut_seconds": 3.0,
+      "initial_state": null,
+      "inputs": null,
+      "timeout": 90.0
+    },
+    "elapsed": 10.2,
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 25718412,
+    "executable_sha256": "8016aca4526111c4158f2cab1a52d0cdfb47828a7f7170700dea5de16642de7f",
+    "state_sha256": {
+      "seat0": "842aa972170e3a591c83088b1a753261b70ca72b1c9b2fe092bb069868130741",
+      "seat1": "842aa972170e3a591c83088b1a753261b70ca72b1c9b2fe092bb069868130741",
+      "seat2": "842aa972170e3a591c83088b1a753261b70ca72b1c9b2fe092bb069868130741",
+      "seat3": "842aa972170e3a591c83088b1a753261b70ca72b1c9b2fe092bb069868130741"
+    },
+    "passed": true
+  },
+  "predictive_4_delay": {
+    "settings": {
+      "native": true,
+      "predictive": true,
+      "launcher": false,
+      "executable": null,
+      "players": 4,
+      "fault": "none",
+      "frames": 180,
+      "at": 60,
+      "cut_seconds": 12,
+      "delay_ms": 50.0,
+      "initial_state": null,
+      "inputs": "re\\run\\predictive-4-inputs.txt",
+      "timeout": 90.0
+    },
+    "elapsed": 22.41,
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 8691150,
+    "executable_sha256": "8016aca4526111c4158f2cab1a52d0cdfb47828a7f7170700dea5de16642de7f",
+    "state_sha256": {
+      "seat0": "13c733e7b8df8aa2a45b410e60973685e4af97e3eed50ce20fc782e7899d54a5",
+      "seat1": "13c733e7b8df8aa2a45b410e60973685e4af97e3eed50ce20fc782e7899d54a5",
+      "seat2": "13c733e7b8df8aa2a45b410e60973685e4af97e3eed50ce20fc782e7899d54a5",
+      "seat3": "13c733e7b8df8aa2a45b410e60973685e4af97e3eed50ce20fc782e7899d54a5"
+    },
+    "passed": true
+  },
+  "extracted_exe_launcher_2_network": {
+    "settings": {
+      "native": true,
+      "predictive": false,
+      "launcher": true,
+      "executable": "re\\run\\release-024-extracted\\ShiningSoul2Recomp-v0.2.4-windows-x64\\ShiningSoul2Recomp.exe",
+      "players": 2,
+      "fault": "network",
+      "frames": 120,
+      "at": 45,
+      "cut_seconds": 3.0,
+      "delay_ms": 0,
+      "initial_state": null,
+      "inputs": null,
+      "timeout": 90.0
+    },
+    "elapsed": 13.8,
+    "exit_codes": [
+      0,
+      0
+    ],
+    "fault_injected": true,
+    "restarts": 0,
+    "proxy_bytes": 2958482,
+    "executable_sha256": "2348b5ac136c2531191c6c07daab2036cecc3fc8b891efab556546e91ff688cf",
+    "state_sha256": {
+      "seat0": "1f5d1d2b2e3001643600141e93a8186cbb216a711b735a6a51d9a822a4981be5",
+      "seat1": "1f5d1d2b2e3001643600141e93a8186cbb216a711b735a6a51d9a822a4981be5"
+    },
+    "passed": true
+  },
+  "portable_core": {
+    "passed": true,
+    "rollback_corrections": 1619,
+    "players": [
+      2,
+      3,
+      4
+    ]
+  }
+}
